@@ -1,0 +1,171 @@
+---
+title: MDX Post Example
+published: 1970-01-08
+description: An MDX example showing how to use JSX in Markdown
+tags: [Markdown]
+category: 文章示例
+image: api
+slug: mdx-example
+series: "Markdown"
+lang: en
+translationKey: "markdown/mdx-example"
+---
+
+import { Badge, StepItem, Steps, TabGroup, Timeline, TimelineItem } from '@components/firefly-mdx';
+
+:::tip
+[Firefly](https://github.com/CuteLeaf/Firefly) supports posts in both `MDX` and `Markdown`. You can combine the formats in your content, but ordinary Markdown is recommended when you do not need complex features.
+:::
+
+<a id="markdown-和-mdx-的区别" data-original-heading-id="markdown-和-mdx-的区别" data-translated-heading-id="the-difference-between-markdown-and-mdx"></a>
+## The Difference Between Markdown and MDX
+- Markdown (MD) is a lightweight markup language for writing plain-text documents that are converted into formatted HTML. Its simple syntax makes it popular for documentation and blog posts.
+- MDX extends Markdown with JSX, allowing JSX code and React components to be embedded in documents for richer interaction and dynamic content.
+
+| Feature | Markdown | MDX |
+| :--- | :--- | :--- |
+| Basic syntax | Supported (CommonMark) | Supported (CommonMark) |
+| HTML tags | Supported | Supported (as JSX) |
+| Component imports | Not supported | Supported (import) |
+| Dynamic data | Not supported | Supported (JS expressions) |
+| Styling | Limited (class/style) | Flexible (className/CSS-in-JS) |
+
+---
+
+<a id="firefly-内置的专属-mdx-ui-组件" data-original-heading-id="firefly-内置的专属-mdx-ui-组件" data-translated-heading-id="built-in-firefly-mdx-ui-components"></a>
+## Built-in Firefly MDX UI Components
+The following UI components are built into Firefly and can be used directly in MDX posts.
+
+<a id="tab分组tabgroup" data-original-heading-id="tab分组tabgroup" data-translated-heading-id="tab-groups-tabgroup"></a>
+### Tab Groups: `TabGroup`
+Create switchable tabs to show code in different languages or different versions within a post.
+````mdx
+<TabGroup labels={["test.js", "test.py"]} client:load>
+  ```js
+  console.log(1)
+  ```
+
+  ```py
+  print("hello world")
+  ```
+</TabGroup>
+````
+<TabGroup labels={["test.js", "test.py"]} client:load>
+  ```js
+  console.log(1)
+  ```
+
+  ```py
+  print("hello world")
+  ```
+</TabGroup>
+
+---
+
+<a id="时间线timeline--timelineitem" data-original-heading-id="时间线timeline--timelineitem" data-translated-heading-id="timelines-timeline--timelineitem"></a>
+### Timelines: `Timeline` / `TimelineItem`
+
+| Property | Required | Description |
+| :--- | :--- | :--- |
+| `date` | No | A date label, such as "2024-03-10" |
+| `title` | No | Item title |
+| `type` | No | Node color: default uses the theme color; other values use the callout palette (tip / note / important / warning / caution) |
+| `icon` | No | Built-in icon displayed in the node: star / rocket / git / flag / book / heart / zap / bug / tag / calendar / code / edit |
+| Body | No | Content inside `<TimelineItem>`; Markdown is supported |
+
+```mdx
+<Timeline>
+  <TimelineItem date="2026-08-16" title="新版本发布" icon="rocket">
+    发布了全新版本，带来以下更新：
+
+    - 新增时间线组件
+    - 改进暗色主题
+
+    正文里支持 **Markdown** 内容。
+  </TimelineItem>
+  <TimelineItem date="2025-11-02" title="站点上线" type="tip" icon="flag">
+    欢迎来到我的博客。
+  </TimelineItem>
+  <TimelineItem date="2025-06-15" title="项目立项" type="note">
+    开始规划 Firefly 主题。
+  </TimelineItem>
+</Timeline>
+```
+
+<Timeline>
+  <TimelineItem date="2026-08-16" title="New Version Released" icon="rocket">
+    A new version has been released with these updates:
+
+    - Added a timeline component
+    - Improved the dark theme
+
+    The body supports **Markdown** content.
+  </TimelineItem>
+  <TimelineItem date="2025-11-02" title="Site Launch" type="tip" icon="flag">
+    Welcome to my blog.
+  </TimelineItem>
+  <TimelineItem date="2025-06-15" title="Project Kickoff" type="note">
+    Planning for the Firefly theme begins.
+  </TimelineItem>
+</Timeline>
+
+---
+
+<a id="步骤条steps--stepitem" data-original-heading-id="步骤条steps--stepitem" data-translated-heading-id="steps-steps--stepitem"></a>
+### Steps: `Steps` / `StepItem`
+
+Numbered steps are useful for tutorials and deployment instructions. Numbers are generated automatically; there is no need to supply them manually.
+
+| Property | Required | Description |
+| :--- | :--- | :--- |
+| `title` | No | Step title |
+| `type` | No | Number-circle color: default uses the theme color; other values use the callout palette (tip / note / important / warning / caution) |
+| `icon` | No | Built-in icon shown instead of the number (star / rocket / git / flag / book / heart / zap / bug / tag / calendar / code / edit) |
+| Body | No | Content inside `<StepItem>`; Markdown is supported |
+
+```mdx
+<Steps>
+  <StepItem title="安装依赖">
+    运行 `pnpm install`。
+  </StepItem>
+  <StepItem title="启动开发服务器" type="tip" icon="rocket">
+    运行 `pnpm dev`，打开 `localhost:4321`。
+  </StepItem>
+  <StepItem title="编写文章">
+    在 `src/content/posts/` 新建 `.mdx` 文章。
+  </StepItem>
+</Steps>
+```
+
+<Steps>
+  <StepItem title="Install Dependencies">
+    Run `pnpm install`.
+  </StepItem>
+  <StepItem title="Start the Development Server" type="tip" icon="rocket">
+    Run `pnpm dev` and open `localhost:4321`.
+  </StepItem>
+  <StepItem title="Write a Post">
+    Create a new `.mdx` post in `src/content/posts/`.
+  </StepItem>
+</Steps>
+
+---
+
+<a id="徽章badge" data-original-heading-id="徽章badge" data-translated-heading-id="badges-badge"></a>
+### Badges: `Badge`
+
+Small colored inline badges that can be embedded in paragraphs or headings.
+
+| Property | Required | Description |
+| :--- | :--- | :--- |
+| `type` | No | default uses the theme color; other values use the callout palette (tip / note / important / warning / caution) |
+
+```mdx
+<Badge type="tip">提示</Badge> <Badge type="warning">注意</Badge>
+```
+
+<Badge>New Feature</Badge> <Badge type="tip">Tip</Badge> <Badge type="note">Note</Badge> <Badge type="important">Important</Badge> <Badge type="warning">Warning</Badge> <Badge type="caution">Caution</Badge>
+
+---
+
+For more information, see the [MDX documentation](https://mdxjs.com/).

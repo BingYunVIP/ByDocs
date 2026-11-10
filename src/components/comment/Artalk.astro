@@ -1,4 +1,6 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
 import { commentConfig, siteConfig } from "@/config";
 
 interface Props {
@@ -7,6 +9,7 @@ interface Props {
 
 const config = {
 	...commentConfig.artalk,
+	locale: pageLocale === "en" ? "en" : "zh-CN",
 	el: "#artalk",
 	site: siteConfig.title,
 	pageKey: Astro.props.path,

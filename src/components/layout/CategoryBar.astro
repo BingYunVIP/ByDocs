@@ -1,9 +1,12 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
+import { createTranslator } from "@i18n/translation";
 import { Icon } from "astro-icon/components";
 import { getCategoryList, getSortedPostsList } from "@/utils/content-utils";
-import { url } from "@/utils/url-utils";
+import { url as baseUrl } from "@/utils/url-utils";
 
 interface Props {
 	currentPostCategory?: string;
@@ -11,8 +14,8 @@ interface Props {
 
 const { currentPostCategory } = Astro.props as Props;
 
-const categories = await getCategoryList();
-const totalPosts = (await getSortedPostsList()).length;
+const categories = await getCategoryList(pageLocale);
+const totalPosts = (await getSortedPostsList(pageLocale)).length;
 const homeUrl = url("/");
 const archiveUrl = url("/archive/");
 
@@ -23,7 +26,7 @@ const pathname = Astro.url.pathname.replace(/\/$/, "");
 const homePath = homeUrl.replace(/\/$/, "");
 const archivePath = archiveUrl.replace(/\/$/, "");
 const isHome = pathname === homePath || pathname === "" || pathname === "/";
-const isCategories = pathname === "/categories";
+const isCategories = pathname === url("/categories/").replace(/\/$/, "");
 const isArchive = pathname === archivePath;
 const postCategory = (currentPostCategory || "").trim();
 
@@ -39,6 +42,8 @@ function initialActive(categoryName: string): {
 	if (postCategory && categoryName === postCategory) return { soft: true };
 	return {};
 }
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <div
@@ -85,7 +90,7 @@ function initialActive(categoryName: string): {
               data-active={active.active ? "" : undefined}
               data-soft-active={active.soft ? "" : undefined}
             >
-              {cat.name}
+              {localizeConfigText(cat.name, pageLocale)}
               <span class="pill-count">{cat.count}</span>
             </a>
             );
@@ -176,7 +181,7 @@ function initialActive(categoryName: string): {
     const archivePath = (bar.getAttribute("data-archive-path") || "/archive").replace(/\/$/, "");
     const isHome = pathname === homePath || pathname === "" || pathname === "/";
     const isArchive = pathname === archivePath;
-    const isCategories = pathname === "/categories";
+    const isCategories = pathname === `${homePath}/categories`.replace(/\/\//g, "/");
 
     return {
       isHome,

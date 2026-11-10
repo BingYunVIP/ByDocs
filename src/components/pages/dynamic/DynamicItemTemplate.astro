@@ -1,4 +1,7 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { Icon } from "astro-icon/components";
 import "@/styles/markdown.css";
 import "@/styles/markdown-extend.styl";
@@ -7,14 +10,16 @@ import DynamicGallery from "@/components/pages/dynamic/DynamicGallery.astro";
 import DynamicInlineComments from "@/components/pages/dynamic/DynamicInlineComments.astro";
 import { dynamicConfig, profileConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
-import { url } from "@/utils/url-utils";
+import { createTranslator } from "@/i18n/translation";
+import { url as baseUrl } from "@/utils/url-utils";
 
 const profileLabel = i18n(I18nKey.dynamicProfile).replace(
 	"{name}",
-	profileConfig.name,
+	localizeConfigText(profileConfig.name, pageLocale),
 );
 const profileUrl = url(dynamicConfig.profileUrl || "/about/");
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <template data-dynamic-item-template>
@@ -24,7 +29,7 @@ const profileUrl = url(dynamicConfig.profileUrl || "/about/");
 				<a href={profileUrl} class="page-avatar" aria-label={profileLabel}>
 					<ImageWrapper
 						src={profileConfig.avatar || ""}
-						alt={profileConfig.name}
+						alt={localizeConfigText(profileConfig.name, pageLocale)}
 						widths={[96]}
 						sizes="48px"
 						loading="lazy"
@@ -33,7 +38,7 @@ const profileUrl = url(dynamicConfig.profileUrl || "/about/");
 				</a>
 				<div class="page-identity">
 					<a href={profileUrl} class="page-author" aria-label={profileLabel}>
-						<strong data-dynamic-author>{profileConfig.name}</strong>
+						<strong data-dynamic-author>{localizeConfigText(profileConfig.name, pageLocale)}</strong>
 					</a>
 					<div class="page-meta">
 						<a class="page-time" data-dynamic-permalink>

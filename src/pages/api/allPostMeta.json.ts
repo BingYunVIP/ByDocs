@@ -1,12 +1,15 @@
+import type { APIContext } from "astro";
+import { getLocaleFromPath, toLocalePath } from "@/utils/locale";
 import { getSortedPosts } from "@/utils/content-utils";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 
-export async function GET(): Promise<Response> {
-	const posts = await getSortedPosts();
+export async function GET(context: APIContext): Promise<Response> {
+	const locale = getLocaleFromPath(context.url.pathname);
+	const posts = await getSortedPosts(locale);
 
 	const allPostsData = posts
 		.map((post) => ({
-			id: post.id,
+			id: post.data.slug,
 			title: post.data.title,
 			description: post.data.description,
 			published: post.data.published.getTime(),

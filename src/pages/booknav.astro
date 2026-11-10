@@ -1,8 +1,10 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+
 import { Icon } from "astro-icon/components";
 import { booknavPageConfig, siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import "@/styles/pages/common.css";
 import {
@@ -19,6 +21,9 @@ if (!siteConfig.pages.booknav) {
 }
 
 // 使用配置文件中的书签数据，按权重排序
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
+
 const groups = getEnabledBooknavGroups();
 
 // 预先解析每个书签的图标与域名，避免在模板里重复计算

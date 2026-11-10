@@ -1,0 +1,8 @@
+---
+import Page from "@/pages/[...page].astro";
+import { getSortedPosts } from "@/utils/content-utils";
+import { siteConfig } from "@/config";
+import type { GetStaticPaths } from "astro";
+export const getStaticPaths = (async ({paginate}) => paginate(await getSortedPosts("en"), {pageSize: siteConfig.pagination.postsPerPage})) satisfies GetStaticPaths;
+---
+<Page {...Astro.props} />

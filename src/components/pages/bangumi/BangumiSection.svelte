@@ -1,14 +1,17 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import ClientPagination from "@/components/common/ClientPagination.svelte";
 import FilterControls from "@/components/common/FilterControls.svelte";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { UserSubjectCollection } from "@/types/bangumi";
 import type { NsfwMode } from "@/types/nsfw";
 import { filterNsfw, isBangumiNsfw } from "@/utils/nsfw-utils";
 import Card from "./Card.svelte";
 
 interface Props {
+	locale?: Locale;
 	sectionId: string;
 	items: UserSubjectCollection[];
 	isActive: boolean;
@@ -17,7 +20,7 @@ interface Props {
 	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
-const {
+const { locale = "zh", 
 	sectionId,
 	items,
 	isActive,
@@ -175,12 +178,12 @@ function goToPage(page: number) {
           data-item-section={sectionId}
           data-item-status={STATUS_MAP[item.type as keyof typeof STATUS_MAP] || "unknown"}
         >
-          <Card item={item} loadImage={isActive} {subjectBaseUrl} {nsfw} />
+          <Card locale={locale} item={item} loadImage={isActive} {subjectBaseUrl} {nsfw} />
         </div>
       {/each}
     </div>
 
-    <ClientPagination
+    <ClientPagination locale={locale}
       totalItems={filteredItems.length}
       itemsPerPage={itemsPerPage}
       currentPage={currentPage}

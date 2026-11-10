@@ -1,0 +1,7 @@
+---
+import Page from "@/pages/posts/[...slug].astro";
+import { getSortedPosts } from "@/utils/content-utils";
+import { removeFileExtension } from "@/utils/url-utils";
+export async function getStaticPaths() { return (await getSortedPosts("en")).map(entry => ({params:{slug: removeFileExtension(entry.id)},props:{entry}})); }
+---
+<Page {...Astro.props} />

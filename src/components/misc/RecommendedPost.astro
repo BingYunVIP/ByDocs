@@ -1,11 +1,15 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { Icon } from "astro-icon/components";
 import { siteConfig } from "@/config/siteConfig";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
+import { getCategoryList } from "@/utils/content-utils";
 import type { PostForList } from "@/utils/content-utils";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
-import { getPostUrlBySlug, url } from "@/utils/url-utils";
+import { getPostUrlBySlug, removeFileExtension, url as baseUrl } from "@/utils/url-utils";
 
 interface Props {
 	relatedPosts: PostForList[];
@@ -21,9 +25,12 @@ const {
 	showRandomPosts = siteConfig.post.randomPosts,
 } = Astro.props;
 const apiUrl = url("/api/allPostMeta.json");
-const relatedIds = JSON.stringify(relatedPosts.map((p) => p.id));
+const relatedIds = JSON.stringify(relatedPosts.map((p) => removeFileExtension(p.id)));
+const categoryLabels = Object.fromEntries((await getCategoryList(pageLocale)).map((category) => [category.name, localizeConfigText(category.name, pageLocale)]));
 const noRelatedPostsText = i18n(I18nKey.noRelatedPosts);
 const noRandomPostsText = i18n(I18nKey.noRandomPosts);
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <div class:list={[
@@ -65,7 +72,7 @@ const noRandomPostsText = i18n(I18nKey.noRandomPosts);
             <div class="flex items-center gap-1.5 text-xs text-black/30 dark:text-white/30 transition mt-0.5">
               {post.data.category && (
                 <span class="shrink-0 px-1.5 py-0.5 rounded-sm bg-black/5 dark:bg-white/10 text-black/40 dark:text-white/40">
-                  {post.data.category}
+                  {localizeConfigText(post.data.category, pageLocale)}
                 </span>
               )}
               <span class="truncate">{post.data.description || formatDateToYYYYMMDD(post.data.published)}</span>
@@ -105,7 +112,7 @@ const noRandomPostsText = i18n(I18nKey.noRandomPosts);
       id="random-posts-list"
       class="flex-1 flex items-center justify-center"
       data-api-url={apiUrl}
-      data-current-id={currentPostId}
+      data-current-id={removeFileExtension(currentPostId)}
       data-related-ids={relatedIds}
     >
       <div id="random-posts-empty" style="display:none" class="flex flex-col items-center text-black/30 dark:text-white/30 transition">
@@ -118,7 +125,7 @@ const noRandomPostsText = i18n(I18nKey.noRandomPosts);
 </div>
 
 {showRandomPosts && (
-<script is:inline define:vars={{ siteTimezone: siteConfig.timezone || "" }}>
+<script is:inline define:vars={{ siteTimezone: siteConfig.timezone || "", categoryLabels }}>
 function renderRandomPosts() {
   var container = document.getElementById('random-posts-list');
   if (!container) return;
@@ -199,7 +206,7 @@ function renderRandomPosts() {
       if (post.category) {
         var cat = document.createElement('span');
         cat.className = 'shrink-0 px-1.5 py-0.5 rounded-sm bg-black/5 dark:bg-white/10 text-black/40 dark:text-white/40';
-        cat.textContent = post.category;
+        cat.textContent = categoryLabels[post.category] || post.category;
         meta.appendChild(cat);
       }
 

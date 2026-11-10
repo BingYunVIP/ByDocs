@@ -1,19 +1,22 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { UserSubjectCollection } from "@/types/bangumi";
 import type { NsfwMode } from "@/types/nsfw";
 import { getFailedCovers, markCoverFailed } from "@/utils/failed-covers";
 import { isBangumiNsfw } from "@/utils/nsfw-utils";
 
 interface Props {
+	locale?: Locale;
 	item: UserSubjectCollection;
 	loadImage?: boolean;
 	subjectBaseUrl?: string;
 	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
-const {
+const { locale = "zh", 
 	item,
 	loadImage = false,
 	subjectBaseUrl = "https://bangumi.one/subject/",

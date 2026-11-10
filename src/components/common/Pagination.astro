@@ -1,10 +1,13 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import type { Page } from "astro";
 import { Icon } from "astro-icon/components";
 import PageJump from "@/components/common/PageJump.svelte";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
-import { url } from "@/utils/url-utils";
+import { createTranslator } from "@/i18n/translation";
+import { url as baseUrl } from "@/utils/url-utils";
 
 interface Props {
 	page: Page;
@@ -56,6 +59,8 @@ const getPageUrl = (p: number) => {
 // 传给 PageJump island 的跳转模板。函数没法跨 island 边界传，只能给字符串
 const jumpHrefTemplate = url("/{page}/");
 const jumpHrefFirst = url("/");
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <div class:list={[className, "pagination-wrapper flex flex-col gap-4 items-center"]} style={style}>
@@ -64,7 +69,7 @@ const jumpHrefFirst = url("/");
     <!-- 移动端简化版分页 -->
     <div class="mobile-pagination flex items-center gap-3">
       <a
-        href={page.url.prev || "#"}
+        href={page.url.prev ? url(page.url.prev) : "#"}
         rel={page.url.prev ? "prev" : undefined}
         aria-label={i18n(I18nKey.paginationPrev)}
         aria-disabled={!page.url.prev ? "true" : "false"}
@@ -86,7 +91,7 @@ const jumpHrefFirst = url("/");
       </a>
 
       <div class="btn-card flex items-center rounded-(--radius-large) px-4 h-11 gap-1.5">
-        <PageJump
+        <PageJump locale={pageLocale}
           client:load
           variant="current"
           currentPage={page.currentPage}
@@ -99,7 +104,7 @@ const jumpHrefFirst = url("/");
       </div>
 
       <a
-        href={page.url.next || "#"}
+        href={page.url.next ? url(page.url.next) : "#"}
         rel={page.url.next ? "next" : undefined}
         aria-label={i18n(I18nKey.paginationNext)}
         aria-disabled={!page.url.next ? "true" : "false"}
@@ -124,7 +129,7 @@ const jumpHrefFirst = url("/");
     <!-- 桌面端完整版分页 -->
     <div class="desktop-pagination flex items-center gap-3">
       <a
-        href={page.url.prev || "#"}
+        href={page.url.prev ? url(page.url.prev) : "#"}
         rel={page.url.prev ? "prev" : undefined}
         aria-label={i18n(I18nKey.paginationPrev)}
         aria-disabled={!page.url.prev ? "true" : "false"}
@@ -148,7 +153,7 @@ const jumpHrefFirst = url("/");
         pages.map((p) => {
           if (p == HIDDEN)
             return (
-              <PageJump
+              <PageJump locale={pageLocale}
                 client:load
                 variant="ellipsis"
                 currentPage={page.currentPage}
@@ -179,7 +184,7 @@ const jumpHrefFirst = url("/");
         })
       }
       <a
-        href={page.url.next || "#"}
+        href={page.url.next ? url(page.url.next) : "#"}
         rel={page.url.next ? "next" : undefined}
         aria-label={i18n(I18nKey.paginationNext)}
         aria-disabled={!page.url.next ? "true" : "false"}

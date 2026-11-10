@@ -20,6 +20,10 @@ export const ja: Translation = {
 	[Key.navMine]: "マイ",
 	[Key.navAbout]: "について",
 	[Key.navLinks]: "リンク",
+	[Key.navAiGateway]: "AI Gateway",
+	[Key.navShop]: "Shop",
+	[Key.navCanvas]: "Canvas",
+	[Key.navSupportGroup]: "Support Group",
 	[Key.all]: "すべて",
 
 	[Key.tags]: "タグ",

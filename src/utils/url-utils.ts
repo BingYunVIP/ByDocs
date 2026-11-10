@@ -1,3 +1,4 @@
+import { toLocalePath, stripLocalePrefix, type Locale } from "@/utils/locale";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 
@@ -6,7 +7,7 @@ import { i18n } from "@i18n/translation";
  * 用于将 Astro v5 Content Layer API 的 id 转换为 URL 友好的 slug
  */
 export function removeFileExtension(id: string): string {
-	return id.replace(/\.(md|mdx|markdown)$/i, "");
+	return id.replace(/^(?:zh|en)\//, "").replace(/\.(md|mdx|markdown)$/i, "");
 }
 
 export function pathsEqual(path1: string, path2: string): boolean {
@@ -33,25 +34,25 @@ function joinUrl(...parts: string[]): string {
 	return joined.replace(/\/+/g, "/");
 }
 
-export function getPostUrlBySlug(slug: string): string {
+export function getPostUrlBySlug(slug: string, locale?: Locale): string {
 	// 移除文件扩展名（如 .md, .mdx 等）
 	const slugWithoutExt = removeFileExtension(slug);
-	return url(`/posts/${slugWithoutExt}/`);
+	return url("/posts/" + slugWithoutExt + "/", locale ?? (slug.startsWith("en/") ? "en" : "zh"));
 }
 
-export function getTagUrl(tag: string): string {
-	if (!tag) return url("/archive/");
-	return url(`/archive/?tag=${encodeURIComponent(tag.trim())}`);
+export function getTagUrl(tag: string, locale?: Locale): string {
+	if (!tag) return url("/archive/", locale);
+	return url(`/archive/?tag=${encodeURIComponent(tag.trim())}`, locale);
 }
 
-export function getCategoryUrl(category: string | null): string {
+export function getCategoryUrl(category: string | null, locale?: Locale): string {
 	if (
 		!category ||
 		category.trim() === "" ||
 		category.trim().toLowerCase() === i18n(I18nKey.uncategorized).toLowerCase()
 	)
-		return url("/archive/?uncategorized=true");
-	return url(`/archive/?category=${encodeURIComponent(category.trim())}`);
+		return url("/archive/?uncategorized=true", locale);
+	return url(`/archive/?category=${encodeURIComponent(category.trim())}`, locale);
 }
 
 export function getDir(path: string): string {
@@ -68,8 +69,8 @@ export function getFileDirFromPath(filePath: string): string {
 	return filePath.replace(/^src\//, "").replace(/\/[^/]+$/, "");
 }
 
-export function getSearchUrl(query: string): string {
-	return url(`/search/?q=${encodeURIComponent(query.trim())}`);
+export function getSearchUrl(query: string, locale?: Locale): string {
+	return url(`/search/?q=${encodeURIComponent(query.trim())}`, locale);
 }
 
 // 生成 canonical URL：仅对客户端筛选路由（/archive/ 与 /search/）剥离查询串，
@@ -77,13 +78,16 @@ export function getSearchUrl(query: string): string {
 // 自我 canonical。分页（/2/）、文章页等无查询串的路径保持原样。
 export function getCanonicalUrl(urlObj: URL): string {
 	const pathname = urlObj.pathname;
-	if (pathname === "/archive/" || pathname === "/search/") {
+	if (stripLocalePrefix(pathname) === "/archive/" || stripLocalePrefix(pathname) === "/search/") {
 		return new URL(pathname, urlObj.origin).toString();
 	}
-	return urlObj.toString();
+	const canonical = new URL(urlObj.toString());
+	canonical.searchParams.delete("lang");
+	canonical.hash = "";
+	return canonical.toString();
 }
 
-export function url(path: string): string {
+export function url(path: string, locale?: Locale): string {
 	// 关键修复：如果是网络URL，直接返回原地址
 	if (
 		path.startsWith("http://") ||
@@ -94,7 +98,7 @@ export function url(path: string): string {
 	}
 
 	// 只有本地相对路径才添加BASE_URL
-	return joinUrl("", import.meta.env.BASE_URL, path);
+	return joinUrl("", import.meta.env.BASE_URL, locale ? toLocalePath(path, locale) : path);
 }
 
 // 内容详情页路径模式：文章(/posts/、/post/) 与 项目详情(/projects/<slug>/)

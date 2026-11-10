@@ -1,4 +1,7 @@
 ---
+import { getLocalizedEntry } from "@/utils/localized-content";
+import { getLocaleFromPath } from "@/utils/locale";
+
 import { getEntry, render } from "astro:content";
 import Comment from "@components/comment/index.astro";
 import Markdown from "@components/common/Markdown.astro";
@@ -10,7 +13,7 @@ import {
 	siteConfig,
 } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import "@/styles/pages/common.css";
 import "@/styles/pages/friends.css";
@@ -20,13 +23,18 @@ if (!siteConfig.pages.friends) {
 	return Astro.redirect("/404/");
 }
 
-const friendsPost = await getEntry("spec", "friends");
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
+
+const friendsPost = await getLocalizedEntry("spec", "friends", pageLocale);
 
 if (!friendsPost) {
 	throw new Error("friends page content not found");
 }
 
-const { Content } = await render(friendsPost);
+const translationMissing = Boolean(friendsPost.data.translationMissing);
+const rendered = translationMissing ? null : await render(friendsPost);
+const Content = rendered?.Content;
 
 // 检查评论系统是否启用
 const isCommentEnabled =
@@ -44,7 +52,8 @@ const description =
 	friendsPageConfig.description || i18n(I18nKey.friendsDescription);
 ---
 
-<MainGridLayout title={title} description={description}>
+<MainGridLayout excludeFromSearch={translationMissing} title={title} description={description}>
+  {translationMissing && <meta slot="head" name="robots" content="noindex" />}
   <div
     class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32"
   >
@@ -177,7 +186,7 @@ const description =
   {friendsPageConfig.showCustomContent !== false && (
     <div class="mt-4 card-base z-10 px-9 py-6 relative w-full">
       <Markdown class="">
-        <Content />
+        {Content ? <Content /> : <div data-pagefind-ignore><h2>Translation unavailable</h2><p>This page is available in Chinese only.</p><a href="/friends/?lang=zh">Read the Chinese original</a></div>}
       </Markdown>
     </div>
   )}

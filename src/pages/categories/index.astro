@@ -1,11 +1,16 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+
 import { Icon } from "astro-icon/components";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { getCategoryList } from "@/utils/content-utils";
 
-const categories = await getCategoryList();
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
+
+const categories = await getCategoryList(pageLocale);
 const totalPosts = categories.reduce((sum, cat) => sum + cat.count, 0);
 ---
 
@@ -36,8 +41,8 @@ const totalPosts = categories.reduce((sum, cat) => sum + cat.count, 0);
                         />
                     </div>
                     <div class="flex-1 min-w-0">
-                        <h2 class="text-lg font-bold text-90 truncate group-hover:text-(--primary) transition-colors" title={category.name}>
-                            {category.name}
+                        <h2 class="text-lg font-bold text-90 truncate group-hover:text-(--primary) transition-colors" title={localizeConfigText(category.name, pageLocale)}>
+                            {localizeConfigText(category.name, pageLocale)}
                         </h2>
                         <p class="text-sm text-30 mt-1 group-hover:text-(--primary)/60 transition-colors">
                             {category.count} {i18n(I18nKey.postsCount)}

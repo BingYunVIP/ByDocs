@@ -5,7 +5,7 @@ import { getContainerRenderer as getMDXRenderer } from "@astrojs/mdx/container-r
 import { getContainerRenderer as getSvelteRenderer } from "@astrojs/svelte/container-renderer";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
-import { url } from "@utils/url-utils";
+import { url, getPostUrlBySlug } from "@utils/url-utils";
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import sanitizeHtml from "sanitize-html";
 
@@ -102,7 +102,7 @@ export async function renderFeedEntries(
 	const container = await AstroContainer.create({ renderers });
 	const entries: FeedEntry[] = [];
 	for (const post of posts) {
-		const link = url(`/posts/${post.id}/`);
+		const link = getPostUrlBySlug(post.id);
 		const updated = post.data.updated ?? post.data.published;
 		const base: Omit<FeedEntry, "content" | "isPasswordProtected"> = {
 			post,
@@ -112,10 +112,11 @@ export async function renderFeedEntries(
 			updated,
 			description: post.data.description || "",
 		};
+		if (post.data.translationMissing) { entries.push({ ...base, content: "Translation unavailable. Read the Chinese original.", isPasswordProtected: false }); continue; }
 		if (post.data.password) {
 			entries.push({
 				...base,
-				content: includeContent ? i18n(I18nKey.passwordProtectedRss) : "",
+				content: includeContent ? i18n(I18nKey.passwordProtectedRss, post.data.lang) : "",
 				isPasswordProtected: true,
 			});
 			continue;
@@ -152,6 +153,7 @@ export function buildAtomFeed(opts: {
 	authorName: string;
 	generator: string;
 	includeContent?: boolean;
+	locale?: "zh" | "en";
 }): string {
 	const {
 		site,
@@ -162,8 +164,8 @@ export function buildAtomFeed(opts: {
 		generator,
 		includeContent = true,
 	} = opts;
-	const siteRoot = toAbsoluteUrl(site, "/");
-	const selfLink = toAbsoluteUrl(site, "atom.xml");
+	const siteRoot = toAbsoluteUrl(site, opts.locale === "en" ? "/en/" : "/");
+	const selfLink = toAbsoluteUrl(site, opts.locale === "en" ? "/en/atom.xml" : "/atom.xml");
 	const feedUpdated =
 		entries.reduce<Date | null>(
 			(latest, e) =>

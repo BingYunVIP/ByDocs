@@ -1,9 +1,11 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+
 import { Icon } from "astro-icon/components";
 import AlbumCard from "@/components/pages/gallery/AlbumCard.astro";
 import { galleryConfig, siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import "@/styles/pages/common.css";
 import { getAlbumCover, scanAlbumPhotos } from "@/utils/gallery-utils";
@@ -13,6 +15,9 @@ import "@/styles/pages/card-grid.css";
 if (!siteConfig.pages.gallery) {
 	return Astro.redirect("/404/");
 }
+
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 
 const title = i18n(I18nKey.gallery);
 const description = i18n(I18nKey.galleryDescription);

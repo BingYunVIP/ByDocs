@@ -1,12 +1,17 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+
 import { Icon } from "astro-icon/components";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { getSeriesList } from "@/utils/content-utils";
 import { getPostUrlBySlug } from "@/utils/url-utils";
 
-const seriesList = await getSeriesList();
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
+
+const seriesList = await getSeriesList(pageLocale);
 const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
 ---
 
@@ -38,7 +43,7 @@ const totalPosts = seriesList.reduce((sum, series) => sum + series.count, 0);
                                 </span>
                                 <span class="flex-1 min-w-0">
                                     <span class="block text-lg font-bold text-90 truncate group-hover:text-(--primary) transition">
-                                        {series.name}
+                                        {localizeConfigText(series.name, pageLocale)}
                                     </span>
                                     <span class="block text-sm text-30 mt-0.5 transition group-hover:text-(--primary)/60">
                                         {series.count} {i18n(I18nKey.postsCount)}

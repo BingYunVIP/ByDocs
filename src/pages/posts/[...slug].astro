@@ -1,4 +1,7 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+import { getLocalizedSiteConfig } from "@/utils/site-config-utils";
+
 import { render } from "astro:content";
 import Comment from "@components/comment/index.astro";
 import Markdown from "@components/common/Markdown.astro";
@@ -6,7 +9,7 @@ import EncryptedPost from "@components/features/EncryptedPost.astro";
 import KatexManager from "@components/features/KatexManager.astro";
 import License from "@components/misc/License.astro";
 import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
+import { createTranslator } from "@i18n/translation";
 import MainGridLayout from "@layouts/MainGridLayout.astro";
 import "@/styles/banner-post.css";
 import {
@@ -30,8 +33,8 @@ import SeriesNav from "@/components/misc/SeriesNav.astro";
 import SharePoster from "@/components/misc/SharePoster.svelte";
 import { coverImageConfig } from "@/config/coverImageConfig";
 import { licenseConfig } from "@/config/licenseConfig";
-import { profileConfig } from "@/config/profileConfig";
-import { siteConfig } from "@/config/siteConfig";
+import { profileConfig as baseProfileConfig } from "@/config/profileConfig";
+import { siteConfig as baseSiteConfig } from "@/config/siteConfig";
 import { sponsorConfig } from "@/config/sponsorConfig";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import { getApiUrlList, processCoverImageSync } from "@/utils/image-utils";
@@ -46,7 +49,13 @@ import {
 	buildPublisherEntity,
 	toAbsoluteUrl,
 } from "@/utils/schema-utils";
-import { url } from "@/utils/url-utils";
+import { url as baseUrl } from "@/utils/url-utils";
+
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const siteConfig = getLocalizedSiteConfig(baseSiteConfig, pageLocale);
+const profileConfig = { ...baseProfileConfig, name: localizeConfigText(baseProfileConfig.name, pageLocale), bio: localizeConfigText(baseProfileConfig.bio, pageLocale) };
+const i18n = createTranslator(pageLocale);
+const url = (path: string) => baseUrl(path, pageLocale);
 
 const showSponsorButton =
 	sponsorConfig.showButtonInPost && siteConfig.pages.sponsor;
@@ -65,9 +74,12 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content, headings } = await render(entry);
+const translationMissing = Boolean(entry.data.translationMissing);
+const rendered = translationMissing ? null : await render(entry);
+const Content = rendered?.Content;
+const headings = rendered?.headings || [];
 
-const { remarkPluginFrontmatter } = await render(entry);
+const remarkPluginFrontmatter = rendered?.remarkPluginFrontmatter || { words: 0, minutes: 0 };
 
 const bannerPostMeta = {
 	title: entry.data.title,
@@ -118,7 +130,7 @@ const coverImage =
 
 // 作者个人页（/about/）绝对 URL，用于 author.url 指向唯一标识作者的页面
 const aboutUrl =
-	toAbsoluteUrl("/about/", siteConfig.site_url) ?? siteConfig.site_url;
+	toAbsoluteUrl(url("/about/"), siteConfig.site_url) ?? siteConfig.site_url;
 
 // 作者实体：与首页/about 的 Person 共用同一 @id（#person），author 用 @id 关联
 const authorAvatarUrl = await getAuthorAvatarUrl();
@@ -145,9 +157,9 @@ const breadcrumbItems = [
 ];
 if (entry.data.category) {
 	breadcrumbItems.push({
-		name: entry.data.category,
+		name: localizeConfigText(entry.data.category, pageLocale),
 		url:
-			toAbsoluteUrl(getCategoryUrl(entry.data.category), siteConfig.site_url) ??
+			toAbsoluteUrl(getCategoryUrl(entry.data.category, pageLocale), siteConfig.site_url) ??
 			siteConfig.site_url,
 	});
 }
@@ -198,7 +210,7 @@ const jsonLd = {
 
 const relatedPosts = await getRelatedPosts(entry, 5);
 const seriesData = await getSeriesPosts(entry);
----
+---{translationMissing ? <MainGridLayout title="Translation unavailable" excludeFromSearch={true}><meta slot="head" name="robots" content="noindex" /><div class="card-base p-8" data-pagefind-ignore><h1>Translation unavailable</h1><p>This content is currently available in Chinese only.</p><a href={"/posts/" + entry.data.slug + "/?lang=zh"}>Read the Chinese original</a></div></MainGridLayout> : <>
 
 <MainGridLayout
   title={entry.data.title}
@@ -430,7 +442,7 @@ const seriesData = await getSeriesPosts(entry);
       {entry.data.password ? (
         <EncryptedPost password={entry.data.password} slug={entry.id} hint={entry.data.passwordHint}>
           <Markdown class="mb-6 markdown-content onload-animation">
-            <Content />
+            {Content && <Content />}
           </Markdown>
 
           {/* 打赏按钮 & 分享按钮 */}
@@ -469,7 +481,7 @@ const seriesData = await getSeriesPosts(entry);
                     <div class="flex items-center gap-3">
                       {
                         siteConfig.post.share && (
-                          <SharePoster
+                          <SharePoster locale={pageLocale}
                             client:load
                             title={entry.data.title}
                             author={entry.data.author || profileConfig.name}
@@ -520,7 +532,7 @@ const seriesData = await getSeriesPosts(entry);
       ) : (
         <>
           <Markdown class="mb-6 markdown-content onload-animation">
-            <Content />
+            {Content && <Content />}
           </Markdown>
 
           {/* 打赏按钮 & 分享按钮 */}
@@ -559,7 +571,7 @@ const seriesData = await getSeriesPosts(entry);
                     <div class="flex items-center gap-3">
                       {
                         siteConfig.post.share && (
-                          <SharePoster
+                          <SharePoster locale={pageLocale}
                             client:load
                             title={entry.data.title}
                             author={entry.data.author || profileConfig.name}
@@ -732,3 +744,4 @@ const seriesData = await getSeriesPosts(entry);
   <!-- 评论 -->
   {entry.data.comment && !entry.data.password && <Comment post={entry} />}
 </MainGridLayout>
+</>}

@@ -1,3 +1,4 @@
+import { localizeConfigText } from "@/utils/locale";
 import type { CollectionEntry } from "astro:content";
 import { getCollection } from "astro:content";
 import * as fs from "node:fs";
@@ -20,7 +21,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
 
 	return publishedPosts.map((post) => {
 		// 将 id 转换为 slug（移除扩展名）以匹配路由参数
-		const slug = removeFileExtension(post.id);
+		const slug = (post.data.lang === "en" ? "en/" : "") + removeFileExtension(post.id);
 		return {
 			params: { slug: `${slug}.png` },
 			props: { post },
@@ -288,7 +289,7 @@ export async function GET({
 											fontWeight: 600,
 											color: subtleTextColor,
 										},
-										children: siteConfig.title,
+										children: localizeConfigText(siteConfig.title, post.data.lang),
 									},
 								},
 							],
@@ -417,7 +418,7 @@ export async function GET({
 														fontWeight: 600,
 														color: textColor,
 													},
-													children: profileConfig.name,
+													children: localizeConfigText(profileConfig.name, post.data.lang),
 												},
 											},
 										],

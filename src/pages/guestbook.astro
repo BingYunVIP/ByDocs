@@ -1,11 +1,14 @@
 ---
+import { getLocalizedEntry } from "@/utils/localized-content";
+import { getLocaleFromPath } from "@/utils/locale";
+
 import { getEntry, render } from "astro:content";
 import Comment from "@components/comment/index.astro";
 import Markdown from "@components/common/Markdown.astro";
 import { Icon } from "astro-icon/components";
 import { commentConfig, siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import "@/styles/pages/common.css";
 
@@ -14,13 +17,18 @@ if (!siteConfig.pages.guestbook) {
 	return Astro.redirect("/404/");
 }
 
-const guestbookPost = await getEntry("spec", "guestbook");
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
+
+const guestbookPost = await getLocalizedEntry("spec", "guestbook", pageLocale);
 
 if (!guestbookPost) {
 	throw new Error("guestbook page content not found");
 }
 
-const { Content } = await render(guestbookPost);
+const translationMissing = Boolean(guestbookPost.data.translationMissing);
+const rendered = translationMissing ? null : await render(guestbookPost);
+const Content = rendered?.Content;
 
 // 检查评论系统是否启用
 const isCommentEnabled = commentConfig?.type && commentConfig.type !== "none";
@@ -30,7 +38,8 @@ const title = i18n(I18nKey.guestbook);
 const description = i18n(I18nKey.guestbookDescription);
 ---
 
-<MainGridLayout title={title} description={description}>
+<MainGridLayout excludeFromSearch={translationMissing} title={title} description={description}>
+  {translationMissing && <meta slot="head" name="robots" content="noindex" />}
   <div
     class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32"
   >
@@ -47,9 +56,10 @@ const description = i18n(I18nKey.guestbookDescription);
           </div>
         </div>
       </div>
-      
+
+
       <Markdown class="mt-2">
-        <Content />
+        {Content ? <Content /> : <div data-pagefind-ignore><h2>Translation unavailable</h2><p>This page is available in Chinese only.</p><a href="/guestbook/?lang=zh">Read the Chinese original</a></div>}
       </Markdown>
     </div>
   </div>

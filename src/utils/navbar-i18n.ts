@@ -1,3 +1,4 @@
+import { toLocalePath, type Locale } from "./locale";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import type { NavBarLink } from "@/types/navBarConfig";
@@ -15,6 +16,11 @@ const NAVBAR_DEFAULT_NAMES: Record<string, I18nKey> = {
 	我的: I18nKey.navMine,
 	关于: I18nKey.navAbout,
 	链接: I18nKey.navLinks,
+	// 冰云服务
+	冰云AI: I18nKey.navAiGateway,
+	冰云小店: I18nKey.navShop,
+	冰云画布: I18nKey.navCanvas,
+	售后群: I18nKey.navSupportGroup,
 	// 页面
 	主页: I18nKey.home,
 	归档: I18nKey.archive,
@@ -33,19 +39,20 @@ const NAVBAR_DEFAULT_NAMES: Record<string, I18nKey> = {
 	关于我: I18nKey.about,
 };
 
-export function resolveNavbarName(name: string): string {
+export function resolveNavbarName(name: string, locale?: Locale): string {
 	const key = NAVBAR_DEFAULT_NAMES[name];
-	return key ? i18n(key) : name;
+	return key ? i18n(key, locale) : name;
 }
 
-export function resolveNavbarLinks(links: NavBarLink[]): NavBarLink[] {
+export function resolveNavbarLinks(links: NavBarLink[], locale?: Locale): NavBarLink[] {
 	return links.map((link) => {
 		const resolved: NavBarLink = {
 			...link,
-			name: resolveNavbarName(link.name),
+			name: resolveNavbarName(link.name, locale),
+			url: !link.external && locale ? toLocalePath(link.url, locale) : link.url,
 		};
 		if (link.children) {
-			resolved.children = resolveNavbarLinks(link.children);
+			resolved.children = resolveNavbarLinks(link.children, locale);
 		}
 		return resolved;
 	});

@@ -1,4 +1,8 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const locale = getLocaleFromPath(Astro.url.pathname);
+interface Props { path: string; pageUrl: string; pageTitle: string; }
+const commentPath = Astro.props.path;
 import { commentConfig } from "@/config";
 
 if (!commentConfig?.giscus) {
@@ -6,6 +10,16 @@ if (!commentConfig?.giscus) {
 }
 
 const giscus = commentConfig.giscus;
+const stableMappings = new Set(["pathname", "url", "title", "og:title"]);
+const usesStableTerm = stableMappings.has(giscus.mapping);
+const originalTerms: Record<string, string> = {
+	pathname: commentPath,
+	url: Astro.props.pageUrl,
+	title: Astro.props.pageTitle,
+	"og:title": Astro.props.pageTitle,
+};
+const mapping = usesStableTerm ? "specific" : giscus.mapping;
+const term = usesStableTerm ? originalTerms[giscus.mapping] : (giscus as typeof giscus & { term?: string }).term;
 const lightTheme = "light";
 const darkTheme = "dark";
 ---
@@ -20,20 +34,21 @@ const darkTheme = "dark";
   repoId={giscus.repoId}
   category={giscus.category}
   categoryId={giscus.categoryId}
-  mapping={giscus.mapping}
+  mapping={mapping}
+  term={term}
   strict={giscus.strict}
   reactionsEnabled={giscus.reactionsEnabled}
   emitMetadata={giscus.emitMetadata}
   inputPosition={giscus.inputPosition}
   theme={lightTheme}
-  lang={giscus.lang}
+  lang={locale === "zh" ? "zh-CN" : "en"}
   loading={giscus.loading}
 />
 
-<script is:inline define:vars={{ lightTheme, darkTheme }}>
+<script is:inline define:vars={{ lightTheme, darkTheme, usesStableTerm }}>
   const requestedPath = new URLSearchParams(window.location.search).get("path");
   const widget = document.querySelector("giscus-widget");
-  if (requestedPath && widget) {
+  if (requestedPath && widget && usesStableTerm) {
     widget.setAttribute("mapping", "specific");
     widget.setAttribute("term", requestedPath);
   }

@@ -1,12 +1,17 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+
 import { Icon } from "astro-icon/components";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { getTagList } from "@/utils/content-utils";
 import { getTagUrl } from "@/utils/url-utils";
 
-const tags = await getTagList();
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
+
+const tags = await getTagList(pageLocale);
 
 // Top 10 标签排行
 const topTags = [...tags].sort((a, b) => b.count - a.count).slice(0, 10);

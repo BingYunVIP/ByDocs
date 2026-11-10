@@ -41,6 +41,13 @@ export function navigateToPage(
 		return;
 	}
 
+	const forcedLocale = new URLSearchParams(window.location.search).get("lang");
+	if (forcedLocale === "zh" || forcedLocale === "en") {
+		const destination = new URL(url, window.location.origin);
+		destination.searchParams.set("lang", forcedLocale);
+		url = destination.pathname + destination.search + destination.hash;
+	}
+
 	// 检查 Swup 是否可用
 	if (typeof window !== "undefined" && window.swup) {
 		try {

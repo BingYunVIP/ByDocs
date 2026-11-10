@@ -1,3 +1,4 @@
+import type { Locale } from "./locale";
 import { getImage } from "astro:assets";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
@@ -118,7 +119,7 @@ const NEUTRAL_COVER_CLASS =
 /**
  * 解析项目状态：标准 key 返回本地化文案 + 配色 + 图标；未知字符串原样显示（中性灰）。
  */
-export function getProjectStatusMeta(status: string): {
+export function getProjectStatusMeta(status: string, locale?: Locale): {
 	label: string;
 	icon: string;
 	className: string;
@@ -143,7 +144,7 @@ export function getProjectStatusMeta(status: string): {
 			known: false,
 		};
 	return {
-		label: i18n(meta.key),
+		label: i18n(meta.key, locale),
 		icon: meta.icon,
 		className: meta.className,
 		coverClassName: meta.coverClassName,

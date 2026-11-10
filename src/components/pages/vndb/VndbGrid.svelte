@@ -1,9 +1,11 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import { onMount } from "svelte";
 import GridSkeleton from "@/components/common/GridSkeleton.svelte";
 import TabNav from "@/components/common/TabNav.svelte";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { NsfwMode } from "@/types/nsfw";
 import type { VndbUlistEntry } from "@/types/vndb";
 import { isVndbNsfw } from "@/utils/nsfw-utils";
@@ -16,6 +18,7 @@ import {
 import VndbSection from "./VndbSection.svelte";
 
 interface Props {
+	locale?: Locale;
 	tabs?: VndbTab[];
 	initialActiveTab?: string;
 	vndbData?: Record<string, VndbUlistEntry[]>;
@@ -31,7 +34,7 @@ interface Props {
 	};
 }
 
-const {
+const { locale = "zh", 
 	tabs: staticTabs,
 	initialActiveTab,
 	vndbData: staticData,
@@ -106,7 +109,7 @@ async function loadDynamicData() {
 			return;
 		}
 
-		const newTabs = buildVndbTabs(allItems);
+		const newTabs = buildVndbTabs(allItems, locale);
 		const newData: Record<string, VndbUlistEntry[]> = { all: allItems };
 		dynamicTabs = newTabs;
 		dynamicData = newData;
@@ -142,7 +145,7 @@ onMount(async () => {
   <TabNav {tabs} {activeTab} onTabChange={handleTabChange} />
 
   {#each tabs as tab (tab.id)}
-    <VndbSection
+    <VndbSection locale={locale}
       sectionId={tab.id}
       items={getVndbItemsForTab(vndbData.all || [], tab.id)}
       isActive={tab.id === activeTab}

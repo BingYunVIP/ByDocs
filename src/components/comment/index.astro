@@ -1,8 +1,13 @@
 ---
-import type { CollectionEntry } from "astro:content";
+import { getLocaleFromPath, stripLocalePrefix } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
+import { getCollection, type CollectionEntry } from "astro:content";
+import { siteConfig, sponsorConfig } from "@/config";
 import { commentConfig } from "@/config/commentConfig";
 import Key from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
+import { getRouteAlternates } from "@/utils/localized-content";
 import { removeFileExtension } from "@/utils/url-utils";
 import Artalk from "./Artalk.astro";
 import Disqus from "./Disqus.astro";
@@ -16,11 +21,14 @@ interface Props {
 	title?: string;
 }
 
-const { post, customPath, title: customTitle } = Astro.props as Props;
+const { post, customPath: localizedPath, title: customTitle } = Astro.props as Props;
+const customPath = localizedPath ? stripLocalePrefix(localizedPath) : undefined;
 
 // 根据页面类型确定路径
 const slugFromPath = (customPath || "/").replace(/^\/+|\/+$/g, "") || "index";
-const slug = post ? removeFileExtension(post.id) : slugFromPath;
+const pairedPath = (await getRouteAlternates(Astro.url.pathname)).zh;
+const legacySlug = pairedPath.match(/^\/posts\/(.+?)\/?$/)?.[1];
+const slug = post ? legacySlug || removeFileExtension(post.id) : slugFromPath;
 const path = customPath
 	? customPath
 	: post
@@ -28,8 +36,20 @@ const path = customPath
 			? `/posts/${slug}`
 			: `/${slug}`
 		: `/${slug}`;
-const url = `${Astro.site?.href}${path}`;
+const url = new URL(path, Astro.site).href;
 const postTitle = post && "title" in post.data ? post.data.title : undefined;
+const chinesePost = post
+	? (await getCollection(post.collection)).find((entry) => entry.data.lang === "zh" && entry.data.translationKey === post.data.translationKey)
+	: undefined;
+const originalTitle = chinesePost && "title" in chinesePost.data ? chinesePost.data.title : customTitle || postTitle;
+const originalPageTitle = stripLocalePrefix(Astro.url.pathname) === "/guestbook/"
+	? createTranslator("zh")(Key.guestbook)
+	: stripLocalePrefix(Astro.url.pathname) === "/sponsor/"
+		? sponsorConfig.title || createTranslator("zh")(Key.sponsorTitle)
+		: originalTitle;
+const legacyPageTitle = originalPageTitle ? `${originalPageTitle} - ${siteConfig.title}`
+	: siteConfig.subtitle ? `${siteConfig.title} - ${siteConfig.subtitle}` : siteConfig.title;
+const legacyPageUrl = new URL(pairedPath, Astro.site).href;
 
 // 强制commentService类型为string，避免类型不兼容警告
 let commentService: string = commentConfig?.type || "none";
@@ -60,7 +80,7 @@ let commentService: string = commentConfig?.type || "none";
       <div class="relative z-10 pl-2 pr-2">
         {commentService === "twikoo" && <Twikoo path={path} />}
         {commentService === "waline" && <Waline path={path} />}
-        {commentService === "giscus" && <Giscus />}
+        {commentService === "giscus" && <Giscus path={pairedPath} pageUrl={legacyPageUrl} pageTitle={legacyPageTitle} />}
         {commentService === "disqus" && <Disqus identifier={slug} url={url} title={customTitle || postTitle || slug} />}
           {commentService === "artalk" && <Artalk path={path} />}
         {commentService === "none" && (

@@ -44,7 +44,7 @@ function normalizeContentPath(value) {
 	return withoutPrefix.length > 0 ? withoutPrefix.join("/") : "";
 }
 
-function createPostUrl(contentPath) {
+function createPostUrl(contentPath, locale = "zh") {
 	const segments = contentPath.split("/");
 
 	if (segments.at(-1)?.toLowerCase() === "index") {
@@ -55,7 +55,7 @@ function createPostUrl(contentPath) {
 		.map((segment) => encodeURIComponent(segment))
 		.join("/");
 
-	return `/posts/${encodedPath ? `${encodedPath}/` : ""}`;
+	return `${locale === "en" ? "/en" : ""}/posts/${encodedPath ? `${encodedPath}/` : ""}`;
 }
 
 /**
@@ -180,8 +180,8 @@ function findMetaByBaseName(metas, target) {
 	return null;
 }
 
-function readPostMeta(contentPath) {
-	const metas = collectPostMetas();
+function readPostMeta(contentPath, locale = "zh") {
+	const metas = collectPostMetas().filter(meta => meta.data.lang === locale);
 
 	// 1. frontmatter slug —— 它就是 Astro 的 entry.id，优先级最高
 	const bySlug = findMetaBySlug(metas, contentPath);
@@ -199,7 +199,7 @@ function readPostMeta(contentPath) {
 	];
 
 	for (const candidate of candidates) {
-		const meta = readMetaFile(path.join(POSTS_DIR, candidate));
+		const meta = readMetaFile(path.join(POSTS_DIR, candidate.replace(/(\.mdx?)$/, "-" + locale + "$1")));
 		if (meta) {
 			return meta;
 		}
@@ -368,7 +368,7 @@ function createText(value) {
 }
 
 function createWikiLinkCard(parsed, context) {
-	const meta = readPostMeta(parsed.contentPath);
+	const meta = readPostMeta(parsed.contentPath, context.locale);
 	if (!meta) {
 		return null;
 	}
@@ -400,7 +400,7 @@ function createWikiLinkCard(parsed, context) {
 	}
 	if (category) {
 		metaItems.push(
-			createElement("span", { class: "wlc-category" }, [createText(category)]),
+			createElement("span", { class: "wlc-category" }, [createText(context.locale === "en" ? ({ "文章示例": "Article Examples", "博客指南": "Blog Guides", "冰云小店": "Shop" }[category] || category) : category)]),
 		);
 	}
 	if (tags.length > 0) {
@@ -445,19 +445,19 @@ function createWikiLinkCard(parsed, context) {
 		"a",
 		{
 			class: "card-wiki-link no-styling",
-			href: createPostUrl(resolvedPath),
+			href: createPostUrl(resolvedPath, context.locale),
 		},
 		children,
 	);
 }
 
-function createWikiLink(value) {
+function createWikiLink(value, context) {
 	const parsed = parseWikiLinkValue(value);
 	if (!parsed) {
 		return null;
 	}
 
-	const meta = parsed.contentPath ? readPostMeta(parsed.contentPath) : null;
+	const meta = parsed.contentPath ? readPostMeta(parsed.contentPath, context.locale) : null;
 	const title =
 		typeof meta?.data.title === "string" && meta.data.title
 			? meta.data.title
@@ -475,7 +475,7 @@ function createWikiLink(value) {
 	}
 
 	const pageUrl = parsed.contentPath
-		? createPostUrl(meta ? toPostId(meta) : parsed.contentPath)
+		? createPostUrl(meta ? toPostId(meta) : parsed.contentPath, context.locale)
 		: "";
 	const url = `${pageUrl}${parsed.heading ? `#${slug(parsed.heading)}` : ""}`;
 
@@ -486,7 +486,7 @@ function createWikiLink(value) {
 	};
 }
 
-function replaceWikiLinks(value) {
+function replaceWikiLinks(value, context) {
 	const children = [];
 	let cursor = 0;
 	let changed = false;
@@ -496,7 +496,7 @@ function replaceWikiLinks(value) {
 			continue;
 		}
 
-		const link = createWikiLink(match[1]);
+		const link = createWikiLink(match[1], context);
 		if (!link) {
 			continue;
 		}
@@ -559,7 +559,7 @@ function transformNode(node, context) {
 		}
 
 		if (child.type === "text") {
-			const replacement = replaceWikiLinks(child.value);
+			const replacement = replaceWikiLinks(child.value, context);
 			if (replacement) {
 				node.children.splice(index, 1, ...replacement);
 				index += replacement.length - 1;
@@ -594,6 +594,7 @@ function transformNode(node, context) {
 export function remarkWikiLink() {
 	return (tree, file) => {
 		const context = {
+			locale: file?.path?.endsWith("-en.md") || file?.path?.endsWith("-en.mdx") ? "en" : "zh",
 			currentDir: file?.path ? path.dirname(file.path) : null,
 		};
 		transformNode(tree, context);

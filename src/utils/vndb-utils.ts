@@ -1,3 +1,4 @@
+import type { Locale } from "./locale";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import type { VndbUlistEntry, VndbUlistResponse } from "@/types/vndb";
@@ -93,26 +94,26 @@ export function normalizeVndbLabel(label: string): string {
 	return lower.replace(/\s+/g, "-") || "unknown";
 }
 
-export function getVndbStatusText(key: string, fallback = ""): string {
+export function getVndbStatusText(key: string, fallback = "", locale?: Locale): string {
 	switch (key) {
 		case "wishlist":
-			return i18n(I18nKey.vndbStatusWishlist);
+			return i18n(I18nKey.vndbStatusWishlist, locale);
 		case "playing":
-			return i18n(I18nKey.vndbStatusPlaying);
+			return i18n(I18nKey.vndbStatusPlaying, locale);
 		case "finished":
-			return i18n(I18nKey.vndbStatusFinished);
+			return i18n(I18nKey.vndbStatusFinished, locale);
 		case "stalled":
-			return i18n(I18nKey.vndbStatusStalled);
+			return i18n(I18nKey.vndbStatusStalled, locale);
 		case "dropped":
-			return i18n(I18nKey.vndbStatusDropped);
+			return i18n(I18nKey.vndbStatusDropped, locale);
 		case "unknown":
-			return i18n(I18nKey.vndbStatusUnknown);
+			return i18n(I18nKey.vndbStatusUnknown, locale);
 		default:
 			return fallback || key;
 	}
 }
 
-export function buildVndbTabs(items: VndbUlistEntry[]): VndbTab[] {
+export function buildVndbTabs(items: VndbUlistEntry[], locale?: Locale): VndbTab[] {
 	const labelMap = new Map<string, string>();
 	for (const item of items) {
 		for (const label of item.labels || []) {
@@ -124,13 +125,13 @@ export function buildVndbTabs(items: VndbUlistEntry[]): VndbTab[] {
 	}
 
 	const tabs: VndbTab[] = [
-		{ id: "all", name: i18n(I18nKey.all), count: items.length },
+		{ id: "all", name: i18n(I18nKey.all, locale), count: items.length },
 	];
 	for (const key of VNDB_LABEL_ORDER) {
 		if (labelMap.has(key)) {
 			tabs.push({
 				id: key,
-				name: getVndbStatusText(key, labelMap.get(key) || key),
+				name: getVndbStatusText(key, labelMap.get(key) || key, locale),
 				count: getVndbItemsForTab(items, key).length,
 			});
 		}
@@ -159,18 +160,18 @@ export function getVndbItemsForTab(
 	);
 }
 
-export function getVndbLengthText(length?: number | null): string {
+export function getVndbLengthText(length?: number | null, locale?: Locale): string {
 	switch (length) {
 		case 1:
-			return i18n(I18nKey.vndbLengthVeryShort);
+			return i18n(I18nKey.vndbLengthVeryShort, locale);
 		case 2:
-			return i18n(I18nKey.vndbLengthShort);
+			return i18n(I18nKey.vndbLengthShort, locale);
 		case 3:
-			return i18n(I18nKey.vndbLengthMedium);
+			return i18n(I18nKey.vndbLengthMedium, locale);
 		case 4:
-			return i18n(I18nKey.vndbLengthLong);
+			return i18n(I18nKey.vndbLengthLong, locale);
 		case 5:
-			return i18n(I18nKey.vndbLengthVeryLong);
+			return i18n(I18nKey.vndbLengthVeryLong, locale);
 		default:
 			return "";
 	}
@@ -187,8 +188,9 @@ function formatPlaytime(minutes?: number | null): string {
 export function formatVndbLength(
 	length?: number | null,
 	minutes?: number | null,
+	locale?: Locale,
 ): string {
-	const label = getVndbLengthText(length);
+	const label = getVndbLengthText(length, locale);
 	const playtime = formatPlaytime(minutes);
 	if (label && playtime) return `${label} · ${playtime}`;
 	return label || playtime;

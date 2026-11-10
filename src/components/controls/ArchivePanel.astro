@@ -1,14 +1,17 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import { getSortedPostsList } from "@/utils/content-utils";
 import { isDateOnly } from "@/utils/date-utils";
-import { getPostUrlBySlug, url } from "@/utils/url-utils";
+import { getPostUrlBySlug, url as baseUrl } from "@/utils/url-utils";
 
 // 归档列表：全量按年分组，服务端渲染。筛选（?tag=/?category=/?uncategorized）
 // 与年份折叠由客户端脚本处理——数据本身在构建期已全部就绪。
-const sortedPostsList = await getSortedPostsList();
+const sortedPostsList = await getSortedPostsList(pageLocale);
 
 // 严格按发布时间倒序（不受置顶影响），镜像原 Svelte 版行为
 const posts = sortedPostsList
@@ -58,7 +61,7 @@ function formatDate(date: Date) {
 }
 
 function formatTag(tagList: string[]) {
-	return tagList.map((t) => `#${t}`).join(" ");
+	return tagList.map((t) => `#${localizeConfigText(t, pageLocale)}`).join(" ");
 }
 
 // 传给客户端脚本的 i18n 文案与配置
@@ -71,7 +74,10 @@ const i18nStrings = {
 };
 const tagsBaseUrl = url("/tags/");
 const categoriesBaseUrl = url("/categories/");
+const taxonomyLabels = Object.fromEntries(posts.flatMap((post) => [post.data.category || "", ...(post.data.tags || [])]).map((value) => [value, localizeConfigText(value, pageLocale)]));
 const foldOnFilter = collapseAllButFirst;
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <archive-panel
@@ -156,7 +162,7 @@ const foldOnFilter = collapseAllButFirst;
                                  bg-[oklch(0.95_0.025_var(--hue))] dark:bg-[oklch(0.25_0.025_var(--hue))]
                                  text-(--primary) group-hover:bg-(--primary) group-hover:text-white!
                                  transition-colors">
-                      {post.data.category}
+                      {localizeConfigText(post.data.category, pageLocale)}
                     </span>
                   )}
                   <span class="truncate">{post.data.title}</span>
@@ -185,7 +191,7 @@ const foldOnFilter = collapseAllButFirst;
   }
 </style>
 
-<script is:inline define:vars={{ i18nStrings, tagsBaseUrl, categoriesBaseUrl }}>
+<script is:inline define:vars={{ i18nStrings, tagsBaseUrl, categoriesBaseUrl, taxonomyLabels }}>
   class ArchivePanel extends HTMLElement {
     constructor() {
       super();
@@ -310,7 +316,7 @@ const foldOnFilter = collapseAllButFirst;
 
       const fmtValues = (f) => {
         const prefix = f.isTag ? "#" : "";
-        return f.values.map((v) => `${prefix}${v}`).join(" / ");
+        return f.values.map((v) => `${prefix}${taxonomyLabels[v] || v}`).join(" / ");
       };
 
       if (linkEl) {
@@ -344,11 +350,11 @@ const foldOnFilter = collapseAllButFirst;
 
       let newTitle = "";
       if (categories.length > 0) {
-        newTitle = categories.join(" / ");
+        newTitle = categories.map((value) => taxonomyLabels[value] || value).join(" / ");
       } else if (uncategorized) {
         newTitle = i18nStrings.uncategorized;
       } else if (tags.length > 0) {
-        newTitle = tags.map((t) => `#${t}`).join(" / ");
+        newTitle = tags.map((t) => `#${taxonomyLabels[t] || t}`).join(" / ");
       }
       // 直接设置（自定义元素在解析阶段升级、首帧前执行），避免默认标题闪烁
       if (newTitle && bannerTitle.textContent !== newTitle) {

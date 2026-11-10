@@ -1,10 +1,13 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { Icon } from "astro-icon/components";
 import WidgetLayout from "@/components/common/WidgetLayout.astro";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { WidgetComponentConfig } from "@/types/config";
-import { url } from "@/utils/url-utils";
+import { url as baseUrl } from "@/utils/url-utils";
 
 export interface Props {
 	class?: string;
@@ -55,10 +58,12 @@ const paddingStyle = getPaddingStyle();
 const widgetId = `advertisement-${Math.random().toString(36).slice(2, 8)}`;
 // 当配置了自定义 padding 时，禁用 WidgetLayout 默认的 px-4
 const useContentPadding = !adConfig.padding;
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <WidgetLayout
-  name={adConfig.title || i18n(I18nKey.advertisement)}
+  name={localizeConfigText(adConfig.title, pageLocale) || i18n(I18nKey.advertisement)}
   showTitle={showTitle}
   id={widgetId}
   contentPadding={useContentPadding}
@@ -86,7 +91,7 @@ const useContentPadding = !adConfig.padding;
       <div class:list={[{ "mb-3": adConfig.content || adConfig.link }]}>
         {adConfig.image.link ? (
           <a
-            href={adConfig.image.link}
+            href={adConfig.image.external ? adConfig.image.link : url(adConfig.image.link)}
             target={adConfig.image.external ? "_blank" : "_self"}
             rel={adConfig.image.external ? "noopener noreferrer" : ""}
             class="block overflow-hidden rounded-lg"
@@ -112,7 +117,7 @@ const useContentPadding = !adConfig.padding;
     <!-- 文本内容 -->
     {adConfig.content && (
       <p class="text-sm text-center mb-3 leading-relaxed text-neutral-600 dark:text-neutral-300 transition">
-        {adConfig.content}
+        {localizeConfigText(adConfig.content, pageLocale)}
       </p>
     )}
 
@@ -120,12 +125,12 @@ const useContentPadding = !adConfig.padding;
     {adConfig.link && (
       <div class="text-center">
         <a
-          href={adConfig.link.url}
+          href={adConfig.link.external ? adConfig.link.url : url(adConfig.link.url)}
           target={adConfig.link.external ? "_blank" : "_self"}
           rel={adConfig.link.external ? "noopener noreferrer" : ""}
           class="btn-regular inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 hover:scale-105"
         >
-          <span>{adConfig.link.text}</span>
+          <span>{localizeConfigText(adConfig.link.text, pageLocale)}</span>
           {adConfig.link.external && (
             <Icon name="fa7-solid:arrow-up-right-from-square" class="w-3.5 h-3.5" aria-hidden="true" />
           )}

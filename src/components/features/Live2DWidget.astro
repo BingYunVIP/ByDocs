@@ -1,5 +1,7 @@
 ---
-import { url } from "@/utils/url-utils";
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+import { url as baseUrl } from "@/utils/url-utils";
 
 interface MenuItem {
 	icon?: string;
@@ -86,6 +88,8 @@ function serializeMenus(menus: Props["config"]["menus"]) {
 	if (menus.align) result.align = menus.align;
 	return result;
 }
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <div

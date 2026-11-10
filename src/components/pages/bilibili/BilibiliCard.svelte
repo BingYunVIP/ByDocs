@@ -1,14 +1,17 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { StandardizedAnime } from "@/types/bilibili";
 
 interface Props {
+	locale?: Locale;
 	anime: StandardizedAnime;
 	onclick?: (anime: StandardizedAnime) => void;
 }
 
-let { anime, onclick }: Props = $props();
+let { locale = "zh",  anime, onclick }: Props = $props();
 
 function handleLoad(e: Event) {
 	const img = e.currentTarget as HTMLImageElement;

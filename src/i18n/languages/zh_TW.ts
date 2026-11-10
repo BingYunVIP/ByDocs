@@ -20,6 +20,10 @@ export const zh_TW: Translation = {
 	[Key.navMine]: "我的",
 	[Key.navAbout]: "關於",
 	[Key.navLinks]: "連結",
+	[Key.navAiGateway]: "冰雲AI",
+	[Key.navShop]: "冰雲小店",
+	[Key.navCanvas]: "冰雲畫布",
+	[Key.navSupportGroup]: "售後群",
 	[Key.all]: "全部",
 
 	[Key.tags]: "標籤",

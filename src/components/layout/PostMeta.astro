@@ -1,10 +1,13 @@
 ---
+import { getLocaleFromPath, stripLocalePrefix, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { Icon } from "astro-icon/components";
 import { commentConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
-import { getCategoryUrl, getTagUrl } from "@/utils/url-utils";
+import { getCategoryUrl, getTagUrl, removeFileExtension } from "@/utils/url-utils";
 
 export interface Props {
 	published: Date;
@@ -56,7 +59,7 @@ const {
 	variant = "default",
 } = Astro.props;
 
-const path = customPath || (id ? `/posts/${id}` : "");
+const path = customPath ? stripLocalePrefix(customPath) : id ? `/posts/${removeFileExtension(id)}` : "";
 const visibleTags =
 	typeof maxTags === "number" ? tags?.slice(0, maxTags) : tags;
 ---
@@ -123,12 +126,12 @@ const visibleTags =
         </div>
         <div class="flex flex-row flex-nowrap items-center">
           <a
-            href={getCategoryUrl(category || "")}
-            aria-label={`View all posts in the ${category || i18n(I18nKey.uncategorized)} category`}
+            href={getCategoryUrl(category || "", pageLocale)}
+            aria-label={`View all posts in the ${localizeConfigText(category || i18n(I18nKey.uncategorized), pageLocale)} category`}
             class="link-lg transition text-50 text-sm font-medium
               hover:text-(--primary) dark:hover:text-(--primary) whitespace-nowrap"
           >
-            {category || i18n(I18nKey.uncategorized)}
+            {localizeConfigText(category || i18n(I18nKey.uncategorized), pageLocale)}
           </a>
         </div>
       </div>
@@ -160,12 +163,12 @@ const visibleTags =
                   /
                 </div>
                 <a
-                  href={getTagUrl(tag)}
-                  aria-label={`View all posts with the ${tag.trim()} tag`}
+                  href={getTagUrl(tag, pageLocale)}
+                  aria-label={`View all posts with the ${localizeConfigText(tag.trim(), pageLocale)} tag`}
                   class="link-lg transition text-50 text-sm font-medium
                     hover:text-(--primary) dark:hover:text-(--primary) whitespace-nowrap"
                 >
-                  {tag.trim()}
+                  {localizeConfigText(tag.trim(), pageLocale)}
                 </a>
               </>
             ))}

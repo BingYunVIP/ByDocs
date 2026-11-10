@@ -1,4 +1,7 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
+let { locale = "zh" }: { locale?: Locale } = $props();
 import {
 	WALLPAPER_BANNER,
 	WALLPAPER_FULLSCREEN,
@@ -6,7 +9,7 @@ import {
 	WALLPAPER_OVERLAY,
 } from "@constants/constants";
 import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
+import { createTranslator } from "@i18n/translation";
 import {
 	getDefaultBannerCarouselEnabled,
 	getDefaultBannerTitleEnabled,

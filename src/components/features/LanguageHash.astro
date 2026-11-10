@@ -1,0 +1,22 @@
+<script>
+function preserveValidHash() {
+	if (!location.hash) return;
+	let id: string;
+	try {
+		id = decodeURIComponent(location.hash.slice(1));
+	} catch {
+		id = "";
+	}
+	if (id && (document.getElementById(id) || Array.from(document.getElementsByName(id)).length)) return;
+	// Dynamic entries may be loaded after the document is parsed.
+	if (id.startsWith("dynamic-") && document.querySelector("[data-dynamic-item-template]") && !document.querySelector("[data-dynamic-ready]")) return;
+	history.replaceState(history.state, "", location.pathname + location.search);
+}
+if (document.readyState === "loading") {
+	document.addEventListener("DOMContentLoaded", preserveValidHash, { once: true });
+} else {
+	preserveValidHash();
+}
+document.addEventListener("firefly:page:loaded", preserveValidHash);
+document.addEventListener("firefly:dynamic:rendered", preserveValidHash);
+</script>

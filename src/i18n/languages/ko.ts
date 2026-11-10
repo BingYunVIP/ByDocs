@@ -20,6 +20,10 @@ export const ko: Translation = {
 	[Key.navMine]: "마이",
 	[Key.navAbout]: "소개",
 	[Key.navLinks]: "링크",
+	[Key.navAiGateway]: "AI Gateway",
+	[Key.navShop]: "Shop",
+	[Key.navCanvas]: "Canvas",
+	[Key.navSupportGroup]: "Support Group",
 	[Key.all]: "전체",
 
 	[Key.tags]: "태그",

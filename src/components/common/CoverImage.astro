@@ -1,4 +1,6 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
 import ImageWrapper from "@/components/common/ImageWrapper.astro";
 import { coverImageConfig } from "@/config";
 import type { ImageFormat, ResponsiveImageLayout } from "@/types/config";
@@ -8,7 +10,7 @@ import {
 	shouldAddNoReferrer,
 } from "@/utils/image-utils";
 import { getLqipProps } from "@/utils/lqip-utils";
-import { url } from "@/utils/url-utils";
+import { url as baseUrl } from "@/utils/url-utils";
 
 interface Props {
 	id?: string;
@@ -79,6 +81,8 @@ const remoteReferrerPolicy =
 	!isLocal && shouldAddNoReferrer(isPublic ? url(src) : src)
 		? "no-referrer"
 		: undefined;
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <div

@@ -1,4 +1,5 @@
 import { siteConfig } from "../config";
+import { getDefaultLocale, type Locale } from "@/utils/locale";
 import type I18nKey from "./i18nKey";
 import { en } from "./languages/en";
 import { ja } from "./languages/ja";
@@ -32,8 +33,8 @@ export function getTranslation(lang: string): Translation {
 	return map[lang.toLowerCase()] || defaultTranslation;
 }
 
-export function i18n(key: I18nKey): string {
-	const lang = siteConfig.lang || "en";
+export function i18n(key: I18nKey, locale?: Locale): string {
+	const lang = locale ? (locale === "zh" ? "zh_CN" : "en") : (siteConfig.lang || getDefaultLocale());
 	const currentLang = getTranslation(lang);
 	const value = currentLang[key];
 
@@ -46,4 +47,8 @@ export function i18n(key: I18nKey): string {
 	}
 
 	return value || defaultTranslation[key];
+}
+
+export function createTranslator(locale: Locale): (key: I18nKey) => string {
+	return (key) => i18n(key, locale);
 }

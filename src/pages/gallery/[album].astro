@@ -1,15 +1,19 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+
 import { Icon } from "astro-icon/components";
 import EncryptedContent from "@/components/features/EncryptedContent.astro";
 import PhotoCard from "@/components/pages/gallery/PhotoCard.astro";
 import { galleryConfig, siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import "@/styles/pages/gallery-album.css";
 import { getAlbumCover, scanAlbumPhotos } from "@/utils/gallery-utils";
 import { getLqipProps } from "@/utils/lqip-utils";
-import { url } from "@/utils/url-utils";
+import { url as baseUrl } from "@/utils/url-utils";
+
+interface Props { [key: string]: unknown; }
 
 // 检查页面是否启用
 if (!siteConfig.pages.gallery) {
@@ -21,6 +25,10 @@ export function getStaticPaths() {
 		params: { album: album.id },
 	}));
 }
+
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
+const url = (path: string) => baseUrl(path, pageLocale);
 
 const { album: albumId } = Astro.params;
 const albumMeta = galleryConfig.albums.find((a) => a.id === albumId);

@@ -1,20 +1,25 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+
 import type { GetStaticPaths } from "astro";
 import Pagination from "@/components/common/Pagination.astro";
 import PostPage from "@/components/layout/PostPage.astro";
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import "@/styles/banner-home.css";
 import { getSortedPosts } from "@/utils/content-utils";
 export const getStaticPaths = (async ({ paginate }) => {
-	const allBlogPosts = await getSortedPosts();
+	const allBlogPosts = await getSortedPosts("zh");
 	// 使用配置中的文章数量
 	const pageSize = siteConfig.pagination.postsPerPage;
 	return paginate(allBlogPosts, { pageSize });
 }) satisfies GetStaticPaths;
 // https://github.com/withastro/astro/issues/6507#issuecomment-1489916992
+
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 
 const { page } = Astro.props;
 
@@ -23,7 +28,7 @@ const len = page.data.length;
 // 列表页隐藏的 h1：首屏用站点标题，后续页用「首页 · 页码」，避免空 h1
 const heading =
 	page.currentPage === 1
-		? siteConfig.title
+		? localizeConfigText(siteConfig.title, pageLocale)
 		: `${i18n(I18nKey.home)} · ${page.currentPage}`;
 ---
 

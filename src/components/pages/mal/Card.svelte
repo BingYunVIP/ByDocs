@@ -1,6 +1,8 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { MalListItem } from "@/types/mal";
 import type { NsfwMode } from "@/types/nsfw";
 import { getFailedCovers, markCoverFailed } from "@/utils/failed-covers";
@@ -12,6 +14,7 @@ import {
 import { isMalNsfw } from "@/utils/nsfw-utils";
 
 interface Props {
+	locale?: Locale;
 	item: MalListItem;
 	loadImage?: boolean;
 	kind?: MalListKind;
@@ -19,7 +22,7 @@ interface Props {
 	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
-const {
+const { locale = "zh", 
 	item,
 	loadImage = false,
 	kind = "anime",
@@ -41,7 +44,7 @@ const STATUS_COLORS: Record<string, string> = {
 const node = $derived(item.node);
 const isManga = $derived(kind === "manga");
 const userStatus = $derived(item.list_status?.status || "unknown");
-const statusText = $derived(getMalStatusText(userStatus));
+const statusText = $derived(getMalStatusText(userStatus, "", locale));
 const statusColor = $derived(STATUS_COLORS[userStatus] || "bg-gray-500");
 
 const title = $derived(node.title || "MAL");
@@ -67,7 +70,7 @@ const seasonText = $derived(
 		? ""
 		: node.start_season
 			? [
-					getMalSeasonText(node.start_season.season || ""),
+					getMalSeasonText(node.start_season.season || "", locale),
 					node.start_season.year,
 				]
 					.filter(Boolean)
@@ -99,7 +102,7 @@ const episodesText = $derived(
 );
 const volumesText = $derived(
 	volumesWatched > 0
-		? `${volumesWatched}${volumesTotal ? `/${volumesTotal}` : ""}卷`
+		? `${volumesWatched}${volumesTotal ? `/${volumesTotal}` : ""}${locale === "en" ? " vol." : "卷"}`
 		: "",
 );
 const progressText = $derived(

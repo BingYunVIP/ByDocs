@@ -1,13 +1,13 @@
+import { getLocalizedCollection } from "./localized-content";
+import { type Locale } from "./locale";
 import { type CollectionEntry, getCollection } from "astro:content";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { getCategoryUrl } from "@utils/url-utils";
 
 // // Retrieve posts and sort them by publication date
-async function getRawSortedPosts() {
-	const allBlogPosts = await getCollection("posts", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
-	});
+async function getRawSortedPosts(locale: Locale = "zh") {
+	const allBlogPosts = (await getLocalizedCollection("posts", locale)).filter(({ data }) => !import.meta.env.PROD || !data.draft);
 
 	const sorted = allBlogPosts.sort((a, b) => {
 		// 首先按置顶状态排序，置顶文章在前
@@ -22,8 +22,8 @@ async function getRawSortedPosts() {
 	return sorted;
 }
 
-export async function getSortedPosts(): Promise<CollectionEntry<"posts">[]> {
-	const sorted = await getRawSortedPosts();
+export async function getSortedPosts(locale: Locale = "zh"): Promise<CollectionEntry<"posts">[]> {
+	const sorted = await getRawSortedPosts(locale);
 
 	for (let i = 1; i < sorted.length; i++) {
 		sorted[i].data.nextSlug = sorted[i - 1].id;
@@ -40,8 +40,8 @@ export type PostForList = {
 	id: string;
 	data: CollectionEntry<"posts">["data"];
 };
-export async function getSortedPostsList(): Promise<PostForList[]> {
-	const sortedFullPosts = await getRawSortedPosts();
+export async function getSortedPostsList(locale: Locale = "zh"): Promise<PostForList[]> {
+	const sortedFullPosts = await getRawSortedPosts(locale);
 
 	// delete post.body
 	const sortedPostsList = sortedFullPosts.map((post) => ({
@@ -57,12 +57,10 @@ export async function getSortedPostsList(): Promise<PostForList[]> {
  * 排序规则：手动 order 降序（越大越靠前，未设置排最后）→ 发布时间降序 → 标题兜底
  * 注意：判断 order 是否设置必须用 !== undefined，否则 0 会被当作「未设置」排到最后
  */
-export async function getSortedProjects(): Promise<
+export async function getSortedProjects(locale: Locale = "zh"): Promise<
 	CollectionEntry<"projects">[]
 > {
-	const allProjects = await getCollection("projects", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
-	});
+	const allProjects = (await getLocalizedCollection("projects", locale)).filter(({ data }) => !import.meta.env.PROD || !data.draft);
 
 	return allProjects.sort((a, b) => {
 		const ao = a.data.order;
@@ -117,7 +115,7 @@ export async function getSeriesPosts(
 	const seriesName = currentPost.data.series.trim();
 	if (!seriesName) return null;
 
-	const allPosts = await getSortedPostsList();
+	const allPosts = await getSortedPostsList(currentPost.data.lang);
 	const posts = allPosts.filter((p) => p.data.series.trim() === seriesName);
 	posts.sort(sortBySeriesOrder);
 
@@ -131,8 +129,8 @@ export type Series = { name: string; count: number; posts: PostForList[] };
  * 获取全站所有系列（按文章中 series 字段分组，每组内部按系列序号排序）
  * 供 /series/ 索引页使用
  */
-export async function getSeriesList(): Promise<Series[]> {
-	const allPosts = await getSortedPostsList();
+export async function getSeriesList(locale: Locale = "zh"): Promise<Series[]> {
+	const allPosts = await getSortedPostsList(locale);
 
 	const groupMap = new Map<string, PostForList[]>();
 	for (const post of allPosts) {
@@ -156,10 +154,8 @@ export type Tag = {
 	count: number;
 };
 
-export async function getTagList(): Promise<Tag[]> {
-	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
-	});
+export async function getTagList(locale: Locale = "zh"): Promise<Tag[]> {
+	const allBlogPosts = (await getLocalizedCollection("posts", locale)).filter(({ data }) => !import.meta.env.PROD || !data.draft);
 
 	const countMap: { [key: string]: number } = {};
 	allBlogPosts.forEach((post: { data: { tags: string[] } }) => {
@@ -183,14 +179,12 @@ export type Category = {
 	url: string;
 };
 
-export async function getCategoryList(): Promise<Category[]> {
-	const allBlogPosts = await getCollection<"posts">("posts", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
-	});
+export async function getCategoryList(locale: Locale = "zh"): Promise<Category[]> {
+	const allBlogPosts = (await getLocalizedCollection("posts", locale)).filter(({ data }) => !import.meta.env.PROD || !data.draft);
 	const count: { [key: string]: number } = {};
 	allBlogPosts.forEach((post: { data: { category: string | null } }) => {
 		if (!post.data.category) {
-			const ucKey = i18n(I18nKey.uncategorized);
+			const ucKey = i18n(I18nKey.uncategorized, locale);
 			count[ucKey] = count[ucKey] ? count[ucKey] + 1 : 1;
 			return;
 		}
@@ -214,7 +208,7 @@ export async function getCategoryList(): Promise<Category[]> {
 		ret.push({
 			name: c,
 			count: count[c],
-			url: getCategoryUrl(c),
+			url: getCategoryUrl(c, locale),
 		});
 	}
 	return ret;
@@ -260,9 +254,7 @@ export async function getRelatedPosts(
 	currentPost: CollectionEntry<"posts">,
 	maxCount = 5,
 ): Promise<PostForList[]> {
-	const allPosts = await getCollection<"posts">("posts", ({ data }) => {
-		return import.meta.env.PROD ? data.draft !== true : true;
-	});
+	const allPosts = (await getLocalizedCollection("posts", currentPost.data.lang)).filter(({ data }) => !import.meta.env.PROD || !data.draft);
 
 	// 排除自身和加密文章
 	const candidates = allPosts.filter(

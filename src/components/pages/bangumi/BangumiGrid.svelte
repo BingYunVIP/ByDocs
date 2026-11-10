@@ -1,15 +1,18 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import { onMount } from "svelte";
 import GridSkeleton from "@/components/common/GridSkeleton.svelte";
 import TabNav from "@/components/common/TabNav.svelte";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { UserSubjectCollection } from "@/types/bangumi";
 import type { NsfwMode } from "@/types/nsfw";
 import { filterNsfw, isBangumiNsfw } from "@/utils/nsfw-utils";
 import BangumiSection from "./BangumiSection.svelte";
 
 interface Props {
+	locale?: Locale;
 	// 静态模式：直接传入数据
 	tabs?: Array<{ id: string; name: string; count: number }>;
 	initialActiveTab?: string;
@@ -27,7 +30,7 @@ interface Props {
 	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
-const {
+const { locale = "zh", 
 	tabs: staticTabs,
 	initialActiveTab,
 	bangumiData: staticData,
@@ -213,7 +216,7 @@ onMount(async () => {
   <TabNav {tabs} {activeTab} onTabChange={handleTabChange} />
 
   {#each tabs as tab (tab.id)}
-    <BangumiSection
+    <BangumiSection locale={locale}
       sectionId={tab.id}
       items={bangumiData[tab.id] || []}
       isActive={tab.id === activeTab}

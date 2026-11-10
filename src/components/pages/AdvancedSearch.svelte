@@ -1,6 +1,9 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
+export let locale: Locale = "zh";
 import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
+import { createTranslator } from "@i18n/translation";
 import { onMount } from "svelte";
 import Icon from "@/components/common/Icon.svelte";
 import type { SearchResult } from "@/global";
@@ -15,6 +18,7 @@ let keyword = "";
 let results: SearchResult[] = [];
 let isSearching = false;
 let initialized = false;
+let searchRequestId = 0;
 
 // 在客户端获取 URL 参数
 const getInitialKeyword = (): string => {
@@ -28,12 +32,12 @@ const getInitialKeyword = (): string => {
 // --- Mocks for Dev Mode ---
 const fakeResult: SearchResult[] = [
 	{
-		url: formatUrl("/"),
+		url: formatUrl("/", locale),
 		meta: { title: "Dev Mode Search Result 1" },
 		excerpt: "This is a <mark>mock</mark> result for development.",
 	},
 	{
-		url: formatUrl("/"),
+		url: formatUrl("/", locale),
 		meta: { title: "Dev Mode Search Result 2" },
 		excerpt: "Pagefind only works in <mark>production</mark> build.",
 	},
@@ -41,32 +45,37 @@ const fakeResult: SearchResult[] = [
 
 // --- Core Search Logic ---
 const search = async () => {
-	if (!initialized || !keyword.trim()) {
+	const requestId = ++searchRequestId;
+	const query = keyword.trim();
+	if (!initialized || !query) {
 		results = [];
+		isSearching = false;
 		return;
 	}
 	isSearching = true;
 
 	try {
 		if (import.meta.env.PROD && window.pagefind) {
-			const response = await window.pagefind.search(keyword);
+			const response = await window.pagefind.search(query);
 			const rawResults = await Promise.all(
 				response.results.map((item) => item.data()),
 			);
+			if (requestId !== searchRequestId) return;
 			results = rawResults;
 		} else if (import.meta.env.DEV) {
 			// 开发模式下的模拟结果
 			results = fakeResult.filter(
 				(item) =>
-					item.excerpt.toLowerCase().includes(keyword.toLowerCase()) ||
-					item.meta.title.toLowerCase().includes(keyword.toLowerCase()),
+					item.excerpt.toLowerCase().includes(query.toLowerCase()) ||
+					item.meta.title.toLowerCase().includes(query.toLowerCase()),
 			);
 		}
 	} catch (error) {
+		if (requestId !== searchRequestId) return;
 		console.error("Search error:", error);
 		results = [];
 	} finally {
-		isSearching = false;
+		if (requestId === searchRequestId) isSearching = false;
 	}
 };
 
@@ -77,7 +86,7 @@ onMount(() => {
 
 		// 从 URL 获取初始关键词
 		const initialKeyword = getInitialKeyword();
-		if (initialKeyword) {
+		if (initialKeyword && !keyword.trim()) {
 			keyword = initialKeyword;
 		}
 
@@ -101,10 +110,16 @@ onMount(() => {
 			});
 		}
 	}
+	return () => {
+		searchRequestId++;
+		clearTimeout(debounceTimer);
+		document.removeEventListener("pagefindready", initialize);
+	};
 });
 
 let debounceTimer: NodeJS.Timeout;
 const handleInput = () => {
+	searchRequestId++;
 	clearTimeout(debounceTimer);
 	debounceTimer = setTimeout(() => {
 		search();

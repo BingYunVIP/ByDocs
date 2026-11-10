@@ -1,4 +1,5 @@
 <script lang="ts">
+import { toLocalePath, type Locale } from "@/utils/locale";
 import { onMount, tick } from "svelte";
 import ClientPagination from "@/components/common/ClientPagination.svelte";
 import { formatTimezoneOffset } from "@/utils/date-utils";
@@ -29,6 +30,7 @@ interface MemosConfig {
 }
 
 interface Props {
+	locale?: Locale;
 	source: string;
 	itemsPerPage: number;
 	showComments: boolean;
@@ -40,7 +42,7 @@ interface Props {
 	memos?: MemosConfig;
 }
 
-const {
+const { locale = "zh", 
 	source,
 	itemsPerPage,
 	showComments,
@@ -123,7 +125,7 @@ function createItem(entry: DynamicData) {
 	const fragment = template.content.cloneNode(true) as DocumentFragment;
 	const root = fragment.querySelector<HTMLElement>("[data-dynamic-entry]");
 	if (!root) return null;
-	const anchorId = `dynamic-${entry.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+	const anchorId = `dynamic-${entry.id.replace(/^(?:zh|en)\//, "").replace(/[^a-zA-Z0-9_-]/g, "-")}`;
 	const permalinkUrl = new URL(window.location.href);
 	permalinkUrl.hash = anchorId;
 	const permalink = `${permalinkUrl.pathname}${permalinkUrl.search}${permalinkUrl.hash}`;
@@ -160,7 +162,7 @@ function createItem(entry: DynamicData) {
 		time.dateTime = date.toISOString();
 		// 第三方 API 和 Memos 使用浏览器本地时区，不做额外时区转换
 		if (source.startsWith("http") || memos?.enable) {
-			time.textContent = date.toLocaleDateString("zh-CN", {
+			time.textContent = date.toLocaleDateString(locale === "en" ? "en" : "zh-CN", {
 				year: "numeric",
 				month: "2-digit",
 				day: "2-digit",
@@ -227,9 +229,9 @@ function createItem(entry: DynamicData) {
 	const comments = root.querySelector<HTMLElement>("dynamic-inline-comments");
 	if (comments) {
 		if (showComments) {
-			comments.dataset.src = `/dynamic/comments/?path=${encodeURIComponent(
-				`/dynamic/${entry.id}/`,
-			)}`;
+			comments.dataset.src = toLocalePath(`/dynamic/comments/?path=${encodeURIComponent(
+				`/dynamic/${entry.id.replace(/^(?:zh|en)\//, "")}/`,
+			)}`, locale);
 		} else {
 			comments.remove();
 		}
@@ -251,6 +253,10 @@ async function renderItems(items: DynamicData[]) {
 			decodeURIComponent(window.location.hash.slice(1)),
 		);
 		target?.scrollIntoView({ behavior: "auto", block: "start" });
+	}
+	if (!loading) {
+		list.dataset.dynamicReady = "true";
+		document.dispatchEvent(new Event("firefly:dynamic:rendered"));
 	}
 }
 
@@ -302,7 +308,7 @@ onMount(() => {
 			if (anchorId) {
 				const anchorIndex = filtered.findIndex(
 					(entry) =>
-						`dynamic-${entry.id.replace(/[^a-zA-Z0-9_-]/g, "-")}` === anchorId,
+						`dynamic-${entry.id.replace(/^(?:zh|en)\//, "").replace(/[^a-zA-Z0-9_-]/g, "-")}` === anchorId,
 				);
 				if (anchorIndex >= 0) {
 					currentPage = Math.floor(anchorIndex / itemsPerPage) + 1;
@@ -344,7 +350,7 @@ onMount(() => {
 <div class="page-feed" bind:this={list}></div>
 
 {#if !loading && !failed}
-	<ClientPagination
+	<ClientPagination locale={locale}
 		totalItems={filtered.length}
 		{itemsPerPage}
 		{currentPage}

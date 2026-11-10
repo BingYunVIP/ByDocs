@@ -20,6 +20,10 @@ export const en: Translation = {
 	[Key.navMine]: "Mine",
 	[Key.navAbout]: "About",
 	[Key.navLinks]: "Links",
+	[Key.navAiGateway]: "AI Gateway",
+	[Key.navShop]: "Shop",
+	[Key.navCanvas]: "Canvas",
+	[Key.navSupportGroup]: "Support Group",
 	[Key.all]: "All",
 
 	[Key.tags]: "Tags",

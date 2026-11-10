@@ -1,13 +1,15 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+
 import Comment from "@components/comment/index.astro";
 import { Icon } from "astro-icon/components";
 import { commentConfig, siteConfig, sponsorConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import "@/styles/pages/common.css";
 import { getLqipProps } from "@/utils/lqip-utils";
-import { url } from "@/utils/url-utils";
+import { url as baseUrl } from "@/utils/url-utils";
 import "@/styles/pages/sponsor.css";
 
 // 检查页面是否启用
@@ -16,6 +18,10 @@ if (!siteConfig.pages.sponsor) {
 }
 
 // 检查评论系统是否启用
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
+const url = (path: string) => baseUrl(path, pageLocale);
+
 const isCommentEnabled =
 	commentConfig?.type &&
 	commentConfig.type !== "none" &&

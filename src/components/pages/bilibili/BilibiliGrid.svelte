@@ -1,20 +1,23 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import ClientPagination from "@components/common/ClientPagination.svelte";
 import { untrack } from "svelte";
 import TabNav from "@/components/common/TabNav.svelte";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { StandardizedAnime } from "@/types/bilibili";
 
 import BilibiliCard from "./BilibiliCard.svelte";
 import BilibiliDetailModal from "./BilibiliDetailModal.svelte";
 
 interface Props {
+	locale?: Locale;
 	items: StandardizedAnime[];
 	itemsPerPage?: number;
 }
 
-let { items, itemsPerPage = 24 }: Props = $props();
+let { locale = "zh",  items, itemsPerPage = 24 }: Props = $props();
 
 // 状态
 let searchQuery = $state("");
@@ -179,7 +182,7 @@ function closeDetail() {
 	{#if pagedItems().length > 0}
 		<div class="media-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
 			{#each pagedItems() as anime (anime.id)}
-				<BilibiliCard {anime} onclick={openDetail} />
+				<BilibiliCard locale={locale} {anime} onclick={openDetail} />
 			{/each}
 		</div>
 	{:else}
@@ -192,7 +195,7 @@ function closeDetail() {
 	{/if}
 
 	<!-- 分页 -->
-	<ClientPagination
+	<ClientPagination locale={locale}
 		totalItems={filteredItems().length}
 		{itemsPerPage}
 		{currentPage}
@@ -201,5 +204,5 @@ function closeDetail() {
 </div>
 
 <!-- 详情弹窗 -->
-<BilibiliDetailModal anime={selectedAnime} onclose={closeDetail} />
+<BilibiliDetailModal locale={locale} anime={selectedAnime} onclose={closeDetail} />
 

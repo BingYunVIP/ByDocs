@@ -1,6 +1,9 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
+import { createTranslator } from "@i18n/translation";
 import { encryptContent } from "@utils/crypto-utils";
 import { Icon } from "astro-icon/components";
 

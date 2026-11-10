@@ -1,11 +1,14 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+import { getLocalizedSiteConfig } from "@/utils/site-config-utils";
+
 import { render } from "astro:content";
 import Markdown from "@components/common/Markdown.astro";
 import { Icon } from "astro-icon/components";
 import CoverImage from "@/components/common/CoverImage.astro";
-import { siteConfig } from "@/config";
+import { siteConfig as baseSiteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { getSortedProjects } from "@/utils/content-utils";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
@@ -18,11 +21,11 @@ import {
 import {
 	getFileDirFromPath,
 	removeFileExtension,
-	url,
+	url as baseUrl,
 } from "@/utils/url-utils";
 
 // 检查页面是否启用
-if (!siteConfig.pages.projects) {
+if (!baseSiteConfig.pages.projects) {
 	return Astro.redirect("/404/");
 }
 
@@ -34,8 +37,16 @@ export async function getStaticPaths() {
 	}));
 }
 
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const siteConfig = getLocalizedSiteConfig(baseSiteConfig, pageLocale);
+const i18n = createTranslator(pageLocale);
+const url = (path: string) => baseUrl(path, pageLocale);
+
 const { entry } = Astro.props;
-const { Content, headings } = await render(entry);
+const translationMissing = Boolean(entry.data.translationMissing);
+const rendered = translationMissing ? null : await render(entry);
+const Content = rendered?.Content;
+const headings = rendered?.headings || [];
 
 const { title, description, published, tags, link, status } = entry.data;
 
@@ -53,11 +64,11 @@ const coverLightboxSrc = await resolveProjectImage(
 const coverBasePath = getFileDirFromPath(entry.filePath || "");
 
 // 状态元数据（标准 key → 本地化 + 配色）
-const statusMeta = status ? getProjectStatusMeta(status) : null;
+const statusMeta = status ? getProjectStatusMeta(status, pageLocale) : null;
 
 // 标签：详情页完整显示所有标签（不折叠成 +N）
 const visibleTags = tags || [];
----
+---{translationMissing ? <MainGridLayout title="Translation unavailable" excludeFromSearch={true}><meta slot="head" name="robots" content="noindex" /><div class="card-base p-8" data-pagefind-ignore><h1>Translation unavailable</h1><p>This content is currently available in Chinese only.</p><a href={"/projects/" + entry.data.slug + "/?lang=zh"}>Read the Chinese original</a></div></MainGridLayout> : <>
 
 <MainGridLayout
   title={title}
@@ -118,7 +129,7 @@ const visibleTags = tags || [];
                     {i !== 0 && (
                       <span class="mx-1.5 text-sm font-medium text-(--meta-divider)">/</span>
                     )}
-                    <span class="text-50 text-sm font-medium whitespace-nowrap">{tag}</span>
+                    <span class="text-50 text-sm font-medium whitespace-nowrap">{localizeConfigText(tag, pageLocale)}</span>
                   </span>
                 ))}
               </span>
@@ -195,9 +206,10 @@ const visibleTags = tags || [];
       <!-- README 正文 -->
       <div data-pagefind-body>
         <Markdown class="mb-6 markdown-content">
-          <Content />
+          {Content && <Content />}
         </Markdown>
       </div>
     </div>
   </div>
 </MainGridLayout>
+</>}

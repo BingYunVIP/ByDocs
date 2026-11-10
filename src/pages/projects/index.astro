@@ -1,9 +1,11 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+
 import { Icon } from "astro-icon/components";
 import ProjectCard from "@/components/pages/projects/ProjectCard.astro";
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import "@/styles/pages/common.css";
 import { getSortedProjects } from "@/utils/content-utils";
@@ -19,10 +21,13 @@ if (!siteConfig.pages.projects) {
 	return Astro.redirect("/404/");
 }
 
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
+
 const title = i18n(I18nKey.projects);
 const description = i18n(I18nKey.projectsDescription);
 
-const projects = await getSortedProjects();
+const projects = await getSortedProjects(pageLocale);
 const projectMeta = projects.map((p) => ({
 	id: removeFileExtension(p.id),
 	title: p.data.title,
@@ -37,7 +42,7 @@ const projectMeta = projects.map((p) => ({
 
 // 筛选：显示全部已知状态（带图标）
 const statusFilters = PROJECT_STATUS_KEYS.map((key) => {
-	const meta = getProjectStatusMeta(key);
+	const meta = getProjectStatusMeta(key, pageLocale);
 	return { key, label: meta.label, icon: meta.icon };
 });
 ---

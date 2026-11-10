@@ -1,8 +1,12 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
+import { navigateToPage } from "@/utils/navigation-utils";
 
 interface Props {
+	locale?: Locale;
 	/**
 	 * "ellipsis"：桌面端页码行里的 `⋯`，点开后原地变成和相邻页码同尺寸的输入框
 	 * "current"：移动端 `3 / 20` 卡片里的当前页数字，点开后原地变成透明底输入框
@@ -20,7 +24,7 @@ interface Props {
 	hrefFirst?: string;
 }
 
-const {
+const { locale = "zh", 
 	variant,
 	currentPage,
 	lastPage,
@@ -67,12 +71,8 @@ function jump(page: number) {
 			? hrefFirst
 			: hrefTemplate.replace("{page}", String(page));
 
-	// 有 Swup 就走 SPA 过渡，没有再退回整页跳转
-	if (window.swup) {
-		window.swup.navigate(href);
-	} else {
-		window.location.href = href;
-	}
+	// Use the shared navigator to retain an explicit locale when storage is blocked.
+	navigateToPage(href);
 }
 
 function submit() {

@@ -1,4 +1,6 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+
 import Comment from "@/components/comment/index.astro";
 import { commentConfig, dynamicConfig, siteConfig } from "@/config";
 import Layout from "@/layouts/Layout.astro";
@@ -12,6 +14,8 @@ if (
 ) {
 	return Astro.redirect("/404/");
 }
+
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
 ---
 
 <Layout title="">

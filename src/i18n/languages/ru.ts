@@ -20,6 +20,10 @@ export const ru: Translation = {
 	[Key.navMine]: "Моё",
 	[Key.navAbout]: "Обо мне",
 	[Key.navLinks]: "Ссылки",
+	[Key.navAiGateway]: "AI Gateway",
+	[Key.navShop]: "Shop",
+	[Key.navCanvas]: "Canvas",
+	[Key.navSupportGroup]: "Support Group",
 	[Key.all]: "Все",
 
 	[Key.tags]: "Теги",

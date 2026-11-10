@@ -1,12 +1,15 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { Icon } from "astro-icon/components";
 import CoverImage from "@/components/common/CoverImage.astro";
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 import { getProjectStatusMeta, resolveLinkIcon } from "@/utils/projects-utils";
-import { url } from "@/utils/url-utils";
+import { removeFileExtension, url as baseUrl } from "@/utils/url-utils";
 
 interface Props {
 	id: string;
@@ -32,10 +35,10 @@ const {
 	link = [],
 } = Astro.props;
 
-const detailUrl = url(`/projects/${id}/`);
+const detailUrl = url(`/projects/${removeFileExtension(id)}/`);
 
 // 状态元数据（标准 key → 本地化 + 配色）
-const statusMeta = status ? getProjectStatusMeta(status) : null;
+const statusMeta = status ? getProjectStatusMeta(status, pageLocale) : null;
 
 // 标签：只显示前 N 个，超出折叠成 +N
 const maxTags = 2;
@@ -49,6 +52,8 @@ const gridCoverFullWidth =
 const coverClass = gridCoverFullWidth
 	? "project-card-image group relative block aspect-2/1 overflow-hidden"
 	: "project-card-image group relative block aspect-2/1 overflow-hidden mx-4 mt-4 rounded-xl";
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <div
@@ -120,7 +125,7 @@ const coverClass = gridCoverFullWidth
                 {i !== 0 && (
                   <span class="mx-1.5 text-sm font-medium text-(--meta-divider)">/</span>
                 )}
-                <span class="text-50 text-sm font-medium whitespace-nowrap">{tag}</span>
+                <span class="text-50 text-sm font-medium whitespace-nowrap">{localizeConfigText(tag, pageLocale)}</span>
               </span>
             ))}
             {hiddenTagCount > 0 && (

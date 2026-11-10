@@ -1,9 +1,12 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { Icon } from "astro-icon/components";
 import { licenseConfig } from "@/config/licenseConfig";
 import { profileConfig } from "@/config/profileConfig";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import { formatDateToYYYYMMDD } from "@/utils/date-utils";
 
 interface Props {
@@ -63,7 +66,7 @@ const licenseIcon = licenseName
         {i18n(I18nKey.author)}
       </div>
       <div class="transition text-black/75 dark:text-white/75 line-clamp-2">
-        {author || profileConf.name}
+        {localizeConfigText(author || profileConf.name, pageLocale)}
       </div>
     </div>
     <div>

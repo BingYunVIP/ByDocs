@@ -16,7 +16,8 @@ import {
 	syncBannerHomeTextVisibility,
 	updateNavbarTransparency,
 } from "@/utils/setting-utils";
-import { pathsEqual, url } from "@/utils/url-utils";
+import { isHomePage as checkIsHomePage } from "@/utils/layout-utils";
+import { pathsEqual } from "@/utils/url-utils";
 
 /**
  * 进度条：WAAPI 驱动 transform/opacity（合成线程动画）。
@@ -149,7 +150,9 @@ function registerSwupHooks(): void {
 
 		// 更新首页状态（body.is-home 驱动 CSS --content-top 等）
 		const bodyElement = document.querySelector("body") as HTMLElement;
-		const isHomePage = pathsEqual(visit.to.url, url("/"));
+		const isHomePage = checkIsHomePage(
+			new URL(visit.to.url, window.location.href).pathname,
+		);
 		const wasHome = bodyElement.classList.contains("is-home");
 		const contentPanel = document.querySelector(
 			".content-panel",

@@ -1,3 +1,5 @@
+import { getLocalizedSiteConfig } from "@/utils/site-config-utils";
+import { getLocaleFromPath, toLocalePath } from "@/utils/locale";
 import I18nKey from "@i18n/i18nKey";
 import { i18n } from "@i18n/translation";
 import { getSortedPosts } from "@utils/content-utils";
@@ -89,33 +91,35 @@ const KEY_PAGES: KeyPage[] = [
 	},
 ];
 
-export const GET: APIRoute = async ({ site }) => {
+export const GET: APIRoute = async ({ site, url: requestUrl }) => {
+	const locale = getLocaleFromPath(requestUrl.pathname);
+	const localizedSite = getLocalizedSiteConfig(siteConfig, locale);
 	const base = site ?? new URL(siteConfig.site_url);
-	const abs = (path: string) => new URL(url(path), base).href;
+	const abs = (path: string) => new URL(url(toLocalePath(path, locale)), base).href;
 
 	const enabledPages = KEY_PAGES.filter(
 		(pageEntry) => !pageEntry.pageKey || siteConfig.pages[pageEntry.pageKey],
 	);
-	const posts = await getSortedPosts();
+	const posts = await getSortedPosts(locale);
 	const recentPosts = posts.slice(0, RECENT_POSTS_COUNT);
 
 	const lines: string[] = [
-		`# ${siteConfig.title}`,
-		`> ${siteConfig.description || siteConfig.subtitle || ""}`,
+		`# ${localizedSite.title}`,
+		`> ${localizedSite.description || localizedSite.subtitle || ""}`,
 		"",
 		"## Key Pages",
 	];
 	for (const pageEntry of enabledPages) {
-		const label = i18n(pageEntry.labelKey);
+		const label = i18n(pageEntry.labelKey, locale);
 		const link = abs(pageEntry.path);
-		const desc = pageEntry.descKey ? i18n(pageEntry.descKey) : "";
+		const desc = pageEntry.descKey ? i18n(pageEntry.descKey, locale) : "";
 		lines.push(
 			desc ? `- [${label}](${link}): ${desc}` : `- [${label}](${link})`,
 		);
 	}
 	lines.push("", "## Recent Posts");
 	for (const post of recentPosts) {
-		const link = abs(url(`/posts/${post.id}/`));
+		const link = abs("/posts/" + post.data.slug + "/");
 		const desc = post.data.description || "";
 		lines.push(
 			desc

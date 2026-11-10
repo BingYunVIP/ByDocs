@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import matter from "gray-matter";
 import { pinyin } from "pinyin-pro";
 
 function getDate() {
@@ -17,7 +18,7 @@ const args = process.argv.slice(2);
 
 if (args.length === 0) {
 	console.error(`Error: No filename argument provided
-Usage: npm run new-post -- <filename>`);
+Usage: pnpm new-post <filename[-zh|-en][.md|.mdx]>`);
 	process.exit(1); // Terminate the script and return error code 1
 }
 
@@ -30,10 +31,25 @@ if (!fileExtensionRegex.test(fileName)) {
 }
 
 const targetDir = "./src/content/posts/";
+const extension = path.extname(fileName).toLowerCase();
+const sourceStem = fileName.slice(0, -extension.length);
+const languageMatch = sourceStem.match(/-(zh|en)$/);
+const lang = languageMatch?.[1] || "zh";
+const translationKey = sourceStem
+	.replace(/-(zh|en)$/, "")
+	.replaceAll("\\", "/");
+if (
+	path.isAbsolute(fileName) ||
+	translationKey.split("/").some((part) => part === ".." || !part)
+) {
+	console.error("Error: Use a filename inside src/content/posts.");
+	process.exit(1);
+}
+fileName = `${translationKey}-${lang}${extension}`;
 const fullPath = path.join(targetDir, fileName);
 
 // Generate slug from filename: strip extension, strip trailing /index
-let slug = fileName.replace(fileExtensionRegex, "");
+let slug = translationKey;
 if (slug.endsWith("/index")) {
 	slug = slug.slice(0, -"/index".length);
 }
@@ -68,7 +84,30 @@ slug = slug
 	})
 	.join("/");
 
-if (fs.existsSync(fullPath)) {
+// Reuse an existing counterpart's public slug and pairing key.
+let pairedKey = translationKey;
+let published = getDate();
+for (const suffix of [".md", ".mdx"]) {
+	const counterpart = path.join(
+		targetDir,
+		`${translationKey}-${lang === "zh" ? "en" : "zh"}${suffix}`,
+	);
+	if (!fs.existsSync(counterpart)) continue;
+	const raw = fs.readFileSync(counterpart, "utf8");
+	const { data } = matter(raw);
+	published = raw.match(/^published:\s*(.+)$/m)?.[1]?.trim() || published;
+	if (typeof data.slug === "string" && data.slug) slug = data.slug;
+	if (typeof data.translationKey === "string" && data.translationKey) {
+		pairedKey = data.translationKey;
+	}
+	break;
+}
+
+if (
+	[".md", ".mdx"].some((suffix) =>
+		fs.existsSync(path.join(targetDir, `${translationKey}-${lang}${suffix}`)),
+	)
+) {
 	console.error(`Error: File ${fullPath} already exists `);
 	process.exit(1);
 }
@@ -80,18 +119,21 @@ if (!fs.existsSync(dirPath)) {
 }
 
 const content = `---
-title: ${args[0]}
-published: ${getDate()}
+title: ${JSON.stringify(translationKey)}
+published: ${published}
 description: ''
 image: ''
 tags: []
 category: ''
 draft: false
-lang: ''
-slug: ${slug}
+lang: ${lang}
+translationKey: ${JSON.stringify(pairedKey)}
+slug: ${JSON.stringify(slug)}
 ---
 `;
 
-fs.writeFileSync(path.join(targetDir, fileName), content);
+fs.writeFileSync(path.join(targetDir, fileName), content, { flag: "wx" });
 
-console.log(`Post ${fullPath} created`);
+console.log(
+	`Post ${fullPath} created (${lang}). Write the ${lang === "en" ? "English" : "Chinese"} title and body before publishing.`,
+);

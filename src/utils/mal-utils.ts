@@ -1,3 +1,4 @@
+import type { Locale } from "./locale";
 import I18nKey from "@/i18n/i18nKey";
 import { i18n } from "@/i18n/translation";
 import type { MalListItem, MalListResponse } from "@/types/mal";
@@ -99,37 +100,37 @@ export function getMalStatusOrder(kind: MalListKind): string[] {
 	return kind === "manga" ? MAL_MANGA_STATUS_ORDER : MAL_ANIME_STATUS_ORDER;
 }
 
-export function getMalStatusText(status: string, fallback = ""): string {
+export function getMalStatusText(status: string, fallback = "", locale?: Locale): string {
 	switch (status) {
 		case "watching":
-			return i18n(I18nKey.malStatusWatching);
+			return i18n(I18nKey.malStatusWatching, locale);
 		case "reading":
-			return i18n(I18nKey.malStatusReading);
+			return i18n(I18nKey.malStatusReading, locale);
 		case "completed":
-			return i18n(I18nKey.malStatusCompleted);
+			return i18n(I18nKey.malStatusCompleted, locale);
 		case "on_hold":
-			return i18n(I18nKey.malStatusOnHold);
+			return i18n(I18nKey.malStatusOnHold, locale);
 		case "dropped":
-			return i18n(I18nKey.malStatusDropped);
+			return i18n(I18nKey.malStatusDropped, locale);
 		case "plan_to_watch":
-			return i18n(I18nKey.malStatusPlanToWatch);
+			return i18n(I18nKey.malStatusPlanToWatch, locale);
 		case "plan_to_read":
-			return i18n(I18nKey.malStatusPlanToRead);
+			return i18n(I18nKey.malStatusPlanToRead, locale);
 		default:
 			return fallback || status;
 	}
 }
 
-export function getMalSeasonText(season: string): string {
+export function getMalSeasonText(season: string, locale?: Locale): string {
 	switch (season) {
 		case "winter":
-			return i18n(I18nKey.malSeasonWinter);
+			return i18n(I18nKey.malSeasonWinter, locale);
 		case "spring":
-			return i18n(I18nKey.malSeasonSpring);
+			return i18n(I18nKey.malSeasonSpring, locale);
 		case "summer":
-			return i18n(I18nKey.malSeasonSummer);
+			return i18n(I18nKey.malSeasonSummer, locale);
 		case "fall":
-			return i18n(I18nKey.malSeasonFall);
+			return i18n(I18nKey.malSeasonFall, locale);
 		default:
 			return season;
 	}

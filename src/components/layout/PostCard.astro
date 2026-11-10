@@ -1,4 +1,6 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
 import type { CollectionEntry } from "astro:content";
 import { render } from "astro:content";
 import { Icon } from "astro-icon/components";
@@ -40,6 +42,7 @@ const {
 	style,
 	loading = "lazy",
 } = Astro.props;
+const translationMissing = "translationMissing" in entry.data && entry.data.translationMissing;
 const className = Astro.props.class;
 
 // 处理随机图：如果image为"api"，则从配置的API获取随机图
@@ -132,6 +135,7 @@ const minutes = remarkPluginFrontmatter.minutes;
         before:absolute before:top-[35px] before:left-[18px] before:hidden md:before:block"
     >
       {title}
+      {translationMissing && <span class="ml-2 inline-block align-middle text-xs px-2 py-1 rounded-md bg-(--btn-regular-bg) text-(--btn-content) font-medium">Chinese only</span>}
 
       {
         password && (
@@ -183,7 +187,7 @@ const minutes = remarkPluginFrontmatter.minutes;
       >
         {bottomTags.map((tag) => (
           <a
-            href={getTagUrl(tag)}
+            href={getTagUrl(tag, pageLocale)}
             aria-label={`View all posts with the ${tag.trim()} tag`}
             class:list={[
               "transition text-xs font-medium",
@@ -192,7 +196,7 @@ const minutes = remarkPluginFrontmatter.minutes;
                 : "tag-item px-2.5 py-1",
             ]}
           >
-            #{tag.trim()}
+            #{localizeConfigText(tag.trim(), pageLocale)}
           </a>
         ))}
         {hiddenTagCount > 0 && (

@@ -1,3 +1,4 @@
+import { localizeCodeControls } from "./localize-code-controls";
 // 内联脚本压缩构建后脚本
 // Astro 只压缩打包后的 script，is:inline 一律原样输出（连注释和缩进都在）。
 // 这里在 astro build 之后扫一遍 dist/ 的 HTML，把内联 JS 过一遍 esbuild。
@@ -64,8 +65,9 @@ async function main() {
 	let scriptCount = 0;
 
 	for (const file of htmlFiles) {
-		const html = await fs.readFile(file, "utf-8");
-		let fileSaved = 0;
+		const originalHtml = await fs.readFile(file, "utf-8");
+		const html = localizeCodeControls(originalHtml);
+		let fileSaved = Buffer.byteLength(originalHtml, "utf-8") - Buffer.byteLength(html, "utf-8");
 
 		const output = html.replace(
 			SCRIPT_RE,
@@ -81,7 +83,7 @@ async function main() {
 			},
 		);
 
-		if (fileSaved !== 0 || output !== html) {
+		if (fileSaved !== 0 || output !== originalHtml) {
 			await fs.writeFile(file, output);
 			savedBytes += fileSaved;
 			touchedFiles++;

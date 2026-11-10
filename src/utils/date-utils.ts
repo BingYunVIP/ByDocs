@@ -1,3 +1,4 @@
+import type { Locale } from "./locale";
 import { siteConfig } from "../config";
 
 /**
@@ -55,9 +56,10 @@ export function formatDateToYYYYMMDD(dateInput: Date | string): string {
 export function formatDateI18n(
 	dateInput: Date | string,
 	includeTime?: boolean,
+	locale?: Locale,
 ): string {
 	const date = typeof dateInput === "string" ? new Date(dateInput) : dateInput;
-	const lang = siteConfig.lang || "en";
+	const lang = locale ? (locale === "zh" ? "zh_CN" : "en") : siteConfig.lang || "en";
 
 	// 根据语言设置不同的日期格式
 	const options: Intl.DateTimeFormatOptions = {
@@ -95,18 +97,18 @@ export function formatDateI18n(
 		ar: "ar-SA",
 	};
 
-	const locale = localeMap[lang] || "en-US";
+	const dateLocale = localeMap[lang] || "en-US";
 	return includeTime
-		? date.toLocaleString(locale, options)
-		: date.toLocaleDateString(locale, options);
+		? date.toLocaleString(dateLocale, options)
+		: date.toLocaleDateString(dateLocale, options);
 }
 
 // 国际化日期时间格式化函数（带时分秒）
-export function formatDateI18nWithTime(dateInput: Date | string): string {
-	return formatDateI18n(dateInput, true);
+export function formatDateI18nWithTime(dateInput: Date | string, locale?: Locale): string {
+	return formatDateI18n(dateInput, true, locale);
 }
 
-export function formatDynamicDate(dateInput: Date | string): string {
+export function formatDynamicDate(dateInput: Date | string, locale?: Locale): string {
 	if (!dateInput) return "";
 
 	if (typeof dateInput === "string") {

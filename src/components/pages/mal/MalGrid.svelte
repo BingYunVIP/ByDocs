@@ -1,10 +1,12 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
 import TabNav from "@/components/common/TabNav.svelte";
 import type { NsfwMode } from "@/types/nsfw";
 import type { MalCategory } from "@/utils/mal-utils";
 import MalSection from "./MalSection.svelte";
 
 interface Props {
+	locale?: Locale;
 	categories: MalCategory[];
 	initialActiveCategory?: string;
 	animeBaseUrl?: string;
@@ -12,7 +14,7 @@ interface Props {
 	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
-const {
+const { locale = "zh", 
 	categories,
 	initialActiveCategory,
 	animeBaseUrl = "https://myanimelist.net/anime/",
@@ -40,7 +42,7 @@ function handleCategoryChange(categoryId: string) {
   <TabNav tabs={categories} activeTab={activeCategory} onTabChange={handleCategoryChange} />
 
   {#each categories as category (category.id)}
-    <MalSection
+    <MalSection locale={locale}
       sectionId={category.id}
       items={category.items}
       isActive={category.id === activeCategory}

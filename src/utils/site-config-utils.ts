@@ -39,8 +39,9 @@ function normalizeSiteLang(
 	return undefined;
 }
 
-// 站点语言，环境变量 PUBLIC_SITE_LANG 优先，未设置或无法识别时使用默认值
-// 例如在部署平台设置 PUBLIC_SITE_LANG=en 即可让站点以英文构建，无需修改配置文件
+// 解析语言检测兜底：PUBLIC_SITE_LANG 优先，未设置或无效时使用 defaultLang。
+// 仅影响无法读取浏览器语言时的默认选择，不控制所有访客的语言。
+// 中英文页面始终同时生成，设置此值不会关闭另一种语言的构建。
 export function resolveSiteLang(
 	defaultLang: SiteConfig["lang"],
 ): SiteConfig["lang"] {
@@ -64,4 +65,15 @@ export function getOgLocale(lang: string): string {
 		default:
 			return "en_US";
 	}
+}
+
+export function getLocalizedSiteConfig<T extends SiteConfig>(config: T, locale: import("./locale").Locale): T {
+	if (locale === "zh") return { ...config, navbar: { ...config.navbar }, lang: "zh_CN" };
+	return { ...config,
+		title: config.title === "冰云文档" ? "BingYun Docs" : config.title,
+		subtitle: config.subtitle === "使用教程" ? "Guides and Tutorials" : config.subtitle,
+		description: "BingYun documentation: practical guides for the BingYun API, AI image generation, residential IP services and ChatGPT accounts. Find setup instructions and troubleshooting advice here.",
+		navbar: { ...config.navbar, title: config.navbar.title === "冰云文档" ? "BingYun Docs" : config.navbar.title },
+		lang: "en",
+	};
 }

@@ -1,10 +1,13 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { Icon } from "astro-icon/components";
 import { siteConfig } from "@/config";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import { getLqipProps } from "@/utils/lqip-utils";
-import { url } from "@/utils/url-utils";
+import { url as baseUrl } from "@/utils/url-utils";
 
 interface Props {
 	id: string;
@@ -47,6 +50,8 @@ const gridCoverFullWidth =
 const coverClass = gridCoverFullWidth
 	? "album-card-image group relative block aspect-2/1 overflow-hidden"
 	: "album-card-image group relative block aspect-2/1 overflow-hidden mx-4 mt-4 rounded-xl";
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <div

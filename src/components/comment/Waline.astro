@@ -1,4 +1,6 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
 import { commentConfig } from "@/config";
 
 interface Props {
@@ -7,6 +9,7 @@ interface Props {
 
 const config = {
 	...commentConfig.waline,
+	lang: pageLocale === "en" ? "en-US" : "zh-CN",
 	el: "#waline",
 	path: Astro.props.path,
 	dark: "html.dark",

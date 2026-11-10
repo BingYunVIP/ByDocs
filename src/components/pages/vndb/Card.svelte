@@ -1,6 +1,8 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { NsfwMode } from "@/types/nsfw";
 import type { VndbUlistEntry } from "@/types/vndb";
 import { getFailedCovers, markCoverFailed } from "@/utils/failed-covers";
@@ -12,13 +14,14 @@ import {
 } from "@/utils/vndb-utils";
 
 interface Props {
+	locale?: Locale;
 	item: VndbUlistEntry;
 	loadImage?: boolean;
 	vnBaseUrl?: string;
 	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
-const {
+const { locale = "zh", 
 	item,
 	loadImage = false,
 	vnBaseUrl = "https://vndb.org/",
@@ -46,7 +49,7 @@ const firstLabel = $derived(
 const labelKey = $derived(normalizeVndbLabel(firstLabel));
 const statusText = $derived(
 	firstLabel
-		? getVndbStatusText(labelKey, firstLabel)
+		? getVndbStatusText(labelKey, firstLabel, locale)
 		: i18n(I18nKey.vndbStatusUnknown),
 );
 const statusColor = $derived(STATUS_COLORS[labelKey] || "bg-gray-500");
@@ -66,7 +69,7 @@ const userVote = $derived(item.vote);
 const rating = $derived(item.vn?.rating);
 const voteCount = $derived(item.vn?.votecount);
 const lengthText = $derived(
-	formatVndbLength(item.vn?.length, item.vn?.length_minutes),
+	formatVndbLength(item.vn?.length, item.vn?.length_minutes, locale),
 );
 const developerText = $derived(
 	(item.vn?.developers || [])

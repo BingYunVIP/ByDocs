@@ -1,8 +1,10 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import ClientPagination from "@/components/common/ClientPagination.svelte";
 import FilterControls from "@/components/common/FilterControls.svelte";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { MalListItem } from "@/types/mal";
 import type { NsfwMode } from "@/types/nsfw";
 import {
@@ -14,6 +16,7 @@ import { filterNsfw, isMalNsfw } from "@/utils/nsfw-utils";
 import Card from "./Card.svelte";
 
 interface Props {
+	locale?: Locale;
 	sectionId: string;
 	items: MalListItem[];
 	isActive: boolean;
@@ -23,7 +26,7 @@ interface Props {
 	nsfw?: NsfwMode; // NSFW 处理："off" | "blur" | "hide"
 }
 
-const {
+const { locale = "zh", 
 	sectionId,
 	items,
 	isActive,
@@ -53,7 +56,7 @@ const filters = $derived.by(() => {
 			.filter((status) => counts[status])
 			.map((status) => ({
 				value: status,
-				label: getMalStatusText(status),
+				label: getMalStatusText(status, "", locale),
 				count: counts[status],
 			})),
 	];
@@ -107,12 +110,12 @@ function goToPage(page: number) {
           data-item-section={sectionId}
           data-item-status={item.list_status?.status || "unknown"}
         >
-          <Card item={item} loadImage={isActive} {kind} {baseUrl} {nsfw}/>
+          <Card locale={locale} item={item} loadImage={isActive} {kind} {baseUrl} {nsfw}/>
         </div>
       {/each}
     </div>
 
-    <ClientPagination
+    <ClientPagination locale={locale}
       totalItems={filteredItems.length}
       itemsPerPage={itemsPerPage}
       currentPage={currentPage}

@@ -1,9 +1,12 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { musicPlayerConfig } from "@/config/musicConfig";
 import { siteConfig } from "@/config/siteConfig";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
-import { url } from "@/utils/url-utils";
+import { createTranslator } from "@/i18n/translation";
+import { url as baseUrl } from "@/utils/url-utils";
 
 const config = musicPlayerConfig;
 
@@ -30,7 +33,7 @@ const localPlaylist =
 		: [];
 
 const managerConfigStr = JSON.stringify({
-	siteTitle: siteConfig.title,
+	siteTitle: localizeConfigText(siteConfig.title, pageLocale),
 	mode: config.mode,
 	meting: config.meting,
 	localPlaylist: localPlaylist,
@@ -56,6 +59,8 @@ const managerConfigStr = JSON.stringify({
 		noCover: i18n(I18nKey.musicNoCover),
 	},
 });
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <script is:inline data-swup-ignore-script define:vars={{ managerConfigStr }}>

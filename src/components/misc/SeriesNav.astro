@@ -1,7 +1,10 @@
 ---
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { Icon } from "astro-icon/components";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import type { PostForList } from "@/utils/content-utils";
 import { getPostUrlBySlug } from "@/utils/url-utils";
 
@@ -24,7 +27,7 @@ const { seriesName, posts, currentPostId } = Astro.props;
       >
         <Icon name="material-symbols:format-list-bulleted" aria-hidden="true" class="shrink-0 text-lg text-(--primary)" />
         <span class="font-bold text-base text-black/80 dark:text-white/80 transition group-hover:text-(--primary)">
-          {i18n(I18nKey.seriesPartOf)}：{seriesName}
+          {i18n(I18nKey.seriesPartOf)}：{localizeConfigText(seriesName, pageLocale)}
         </span>
         <span class="ml-auto shrink-0 text-xs px-2 py-0.5 rounded-full bg-(--btn-regular-bg) text-(--btn-content) transition">
           {posts.length}

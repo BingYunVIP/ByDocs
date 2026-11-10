@@ -1,22 +1,33 @@
 ---
+import { getLocalizedEntry } from "@/utils/localized-content";
+import { getLocaleFromPath, localizeConfigText } from "@/utils/locale";
+import { getLocalizedSiteConfig } from "@/utils/site-config-utils";
+
 
 import { getEntry, render } from "astro:content";
 import Markdown from "@components/common/Markdown.astro";
-import { profileConfig } from "@/config/profileConfig";
-import { siteConfig } from "@/config/siteConfig";
+import { profileConfig as baseProfileConfig } from "@/config/profileConfig";
+import { siteConfig as baseSiteConfig } from "@/config/siteConfig";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 import MainGridLayout from "@/layouts/MainGridLayout.astro";
 import { getAuthorAvatarUrl } from "@/utils/schema-image";
 import { buildProfilePage } from "@/utils/schema-utils";
 
-const aboutPost = await getEntry("spec", "about");
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const siteConfig = getLocalizedSiteConfig(baseSiteConfig, pageLocale);
+const profileConfig = { ...baseProfileConfig, name: localizeConfigText(baseProfileConfig.name, pageLocale), bio: localizeConfigText(baseProfileConfig.bio, pageLocale) };
+const i18n = createTranslator(pageLocale);
+
+const aboutPost = await getLocalizedEntry("spec", "about", pageLocale);
 
 if (!aboutPost) {
 	throw new Error("About page content not found");
 }
 
-const { Content } = await render(aboutPost);
+const translationMissing = Boolean(aboutPost.data.translationMissing);
+const rendered = translationMissing ? null : await render(aboutPost);
+const Content = rendered?.Content;
 
 const avatarUrl = await getAuthorAvatarUrl();
 const jsonLd = buildProfilePage({
@@ -27,12 +38,14 @@ const jsonLd = buildProfilePage({
 	description: profileConfig.bio,
 });
 ---
-<MainGridLayout title={i18n(I18nKey.about)} description={i18n(I18nKey.about)}>
+<MainGridLayout excludeFromSearch={translationMissing} title={i18n(I18nKey.about)} description={i18n(I18nKey.about)}>
+  {translationMissing && <meta slot="head" name="robots" content="noindex" />}
     <script is:inline slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
     <div class="flex w-full rounded-(--radius-large) overflow-hidden relative min-h-32">
         <div class="card-base z-10 px-9 py-6 relative w-full ">
-            <Markdown class="mt-2">
-                <Content />
+
+      <Markdown class="mt-2">
+                {Content ? <Content /> : <div data-pagefind-ignore><h2>Translation unavailable</h2><p>This page is available in Chinese only.</p><a href="/about/?lang=zh">Read the Chinese original</a></div>}
             </Markdown>
         </div>
     </div>

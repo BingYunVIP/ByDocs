@@ -1,7 +1,10 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import { musicPlayerConfig } from "@/config/musicConfig";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 
 // MusicPlayer 的视图控制脚本只需要发一份：页面上可能同时有导航栏面板和侧栏
 // 两个 widget，脚本内容除 widgetId 外完全一致。这里统一发一次，由脚本自己

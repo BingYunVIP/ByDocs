@@ -18,6 +18,12 @@ enum I18nKey {
 	navAbout = "navAbout",
 	navLinks = "navLinks",
 
+	// 冰云服务导航
+	navAiGateway = "navAiGateway",
+	navShop = "navShop",
+	navCanvas = "navCanvas",
+	navSupportGroup = "navSupportGroup",
+
 	tags = "tags",
 	categories = "categories",
 	allCategories = "allCategories",

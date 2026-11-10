@@ -1,15 +1,21 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
 import { Icon } from "astro-icon/components";
-import { siteConfig } from "@/config";
+import { getLocalizedSiteConfig } from "@/utils/site-config-utils";
+import { siteConfig as baseSiteConfig } from "@/config";
 import type { NavBarLink } from "@/types/config";
-import { url } from "@/utils/url-utils";
+import { url as baseUrl } from "@/utils/url-utils";
 
 interface Props {
 	links: NavBarLink[];
 }
 
+const siteConfig = getLocalizedSiteConfig(baseSiteConfig, pageLocale);
 const processedLinks = Astro.props.links;
 const navTitle = siteConfig.navbar.title || siteConfig.title;
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 <div id="nav-menu-panel" class:list={["float-panel-closed absolute inset-x-0 z-1100"]} data-floating-panel data-floating-panel-trigger="nav-menu-switch" data-floating-panel-scroll-lock data-floating-panel-close-delay="300" inert aria-hidden="true">
     <!-- 一个滑动容器保证内容、毛玻璃和遮罩边缘处于同一合成坐标系。 -->
@@ -17,10 +23,10 @@ const navTitle = siteConfig.navbar.title || siteConfig.title;
     <div class="mobile-menu-glass" aria-hidden="true"></div>
     <div class="mobile-menu-scrim" aria-hidden="true"></div>
     <!-- 抽屉：MD3 侧边导航，右侧滑入，占满整高，内部滚动 -->
-    <aside class="mobile-menu-drawer" role="dialog" aria-modal="true" aria-label="导航菜单">
+    <aside class="mobile-menu-drawer" role="dialog" aria-modal="true" aria-label={pageLocale === "en" ? "Navigation menu" : "导航菜单"}>
         <header class="mobile-menu-header">
             <span class="mobile-menu-title">{navTitle}</span>
-            <button type="button" class="mobile-menu-close" aria-label="关闭菜单">
+            <button type="button" class="mobile-menu-close" aria-label={pageLocale === "en" ? "Close menu" : "关闭菜单"}>
                 <Icon name="material-symbols:close-rounded" class="text-[1.5rem]" />
             </button>
         </header>
@@ -53,10 +59,6 @@ const navTitle = siteConfig.navbar.title || siteConfig.title;
                                     >
 										{child.icon && <Icon name={child.icon} class="mobile-menu-item-icon" />}
                                         <span class="mobile-menu-item-label">{child.name}</span>
-                                        {child.external && <Icon
-                                            name="fa7-solid:arrow-up-right-from-square"
-                                            class="mobile-menu-item-external text-[0.9rem] shrink-0"
-                                        />}
                                     </a>
                                 ))}
                             </div>
@@ -74,10 +76,6 @@ const navTitle = siteConfig.navbar.title || siteConfig.title;
 							{!link.external && <Icon
                                 name="material-symbols:chevron-right-rounded"
                                 class="mobile-menu-item-arrow"
-                            />}
-							{link.external && <Icon
-                                name="fa7-solid:arrow-up-right-from-square"
-                                class="mobile-menu-item-external text-[0.9rem] shrink-0"
                             />}
                         </a>
                     )}
@@ -366,9 +364,6 @@ const navTitle = siteConfig.navbar.title || siteConfig.title;
     }
     .mobile-dropdown[data-expanded="true"] .mobile-menu-item-arrow {
         transform: rotate(180deg);
-    }
-    .mobile-menu-item-external {
-        color: var(--drawer-on-surface-variant);
     }
 
     /* ---- 子项缩进 ---- */

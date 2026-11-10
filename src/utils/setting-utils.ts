@@ -65,6 +65,7 @@ export function resolveTheme(theme: LIGHT_DARK_MODE): LIGHT_DARK_MODE {
 }
 
 export function getHue(): number {
+	if (!displaySettingsConfig.themeColorSwitchable) return getDefaultHue();
 	// 先检查全局对象
 	if (typeof window === "undefined" || !window.localStorage) {
 		return getDefaultHue();
@@ -82,12 +83,17 @@ export function setHue(hue: number): void {
 	) {
 		return;
 	}
-	localStorage.setItem("hue", String(hue));
+	const effectiveHue = displaySettingsConfig.themeColorSwitchable
+		? hue
+		: getDefaultHue();
+	if (displaySettingsConfig.themeColorSwitchable) {
+		localStorage.setItem("hue", String(effectiveHue));
+	}
 	const r = document.querySelector(":root") as HTMLElement;
 	if (!r) {
 		return;
 	}
-	r.style.setProperty("--hue", String(hue));
+	r.style.setProperty("--hue", String(effectiveHue));
 }
 
 export function applyThemeToDocument(theme: LIGHT_DARK_MODE): void {

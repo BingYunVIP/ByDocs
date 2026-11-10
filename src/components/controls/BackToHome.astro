@@ -1,8 +1,13 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const i18n = createTranslator(pageLocale);
 import FloatingButton from "@/components/common/FloatingButton.astro";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
-import { url } from "@/utils/url-utils";
+import { createTranslator } from "@/i18n/translation";
+import { url as baseUrl } from "@/utils/url-utils";
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 

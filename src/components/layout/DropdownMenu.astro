@@ -1,9 +1,11 @@
 ---
+import { getLocaleFromPath } from "@/utils/locale";
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
 import { Icon } from "astro-icon/components";
 import DropdownItem from "@/components/common/DropdownItem.astro";
 import DropdownPanel from "@/components/common/DropdownPanel.astro";
 import type { NavBarLink } from "@/types/config";
-import { url } from "@/utils/url-utils";
+import { url as baseUrl } from "@/utils/url-utils";
 
 interface Props {
 	link: NavBarLink;
@@ -20,18 +22,20 @@ if (!link) {
 const processedLink = link;
 
 const hasChildren = processedLink.children && processedLink.children.length > 0;
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <div class:list={["dropdown-container", className]} data-dropdown>
 	{hasChildren ? (
 		<button 
-			class="btn-plain scale-animation rounded-lg h-10 font-bold px-4 pr-8 active:scale-95 dropdown-trigger relative"
+			class="btn-plain scale-animation rounded-lg h-10 font-bold px-2 pr-7 active:scale-95 dropdown-trigger relative"
 			aria-expanded="false"
 			aria-haspopup="true"
 			data-dropdown-trigger
 		>
 			<div class="flex items-center gap-1.5">
-				{processedLink.icon && <Icon name={processedLink.icon} class="text-[1.1rem] mr-1.5 navbar-icon" />}
+				{processedLink.icon && <Icon name={processedLink.icon} class="text-[1.1rem] navbar-icon" />}
 				{processedLink.name}
 			</div>
 			<Icon name="material-symbols:keyboard-arrow-down-rounded" class="text-[1.2rem] transition-transform duration-200 dropdown-arrow absolute right-2.5 top-1/2 -translate-y-1/2" />
@@ -47,9 +51,6 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 					>
 						{child.icon && <Icon name={child.icon} class="text-[1.25rem] mr-3 navbar-icon" />}
 						<span>{child.name}</span>
-						{child.external && (
-							<Icon name="fa7-solid:arrow-up-right-from-square" class="text-[0.75rem] text-black/25 dark:text-white/25 ml-auto" />
-						)}
 					</DropdownItem>
 				))}
 			</DropdownPanel>
@@ -59,12 +60,11 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 			aria-label={processedLink.name} 
 			href={processedLink.external ? processedLink.url : url(processedLink.url)} 
 			target={processedLink.external ? "_blank" : null}
-			class="btn-plain scale-animation rounded-lg h-10 font-bold px-4 active:scale-95"
+			class="btn-plain scale-animation rounded-lg h-10 font-bold px-2 active:scale-95"
 		>
 			<div class="flex items-center gap-1.5">
-				{processedLink.icon && <Icon name={processedLink.icon} class="text-[1.1rem] mr-1.5 navbar-icon" />}
+				{processedLink.icon && <Icon name={processedLink.icon} class="text-[1.1rem] navbar-icon" />}
 				{processedLink.name}
-				{processedLink.external && <Icon name="fa7-solid:arrow-up-right-from-square" class="text-[0.875rem] transition -translate-y-px ml-1 text-black/20 dark:text-white/20" />}
 			</div>
 		</a>
 	)}
@@ -74,7 +74,7 @@ const hasChildren = processedLink.children && processedLink.children.length > 0;
 	@reference "../../styles/main.css";
 
 	.dropdown-container {
-		@apply relative;
+		@apply relative shrink-0 whitespace-nowrap;
 	}
 
 	.dropdown-menu {

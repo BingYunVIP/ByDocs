@@ -5,6 +5,8 @@ import MicrosoftClarity from "@components/analytics/MicrosoftClarity.astro";
 import UmamiAnalytics from "@components/analytics/UmamiAnalytics.astro";
 import CodeGroupManager from "@components/features/CodeGroupManager.astro";
 import FancyboxManager from "@components/features/FancyboxManager.astro";
+import LanguageHash from "@/components/features/LanguageHash.astro";
+import CodeLocale from "@/components/features/CodeLocale.astro";
 import FontSetup from "@components/features/FontSetup.astro";
 import GithubCardManager from "@components/features/GithubCardManager.astro";
 import MusicManager from "@components/features/MusicManager.astro";
@@ -22,7 +24,7 @@ import {
 	musicPlayerConfig,
 	navbarMode,
 	profileConfig,
-	siteConfig,
+	siteConfig as baseSiteConfig,
 } from "@/config";
 import {
 	BANNER_HEIGHT,
@@ -36,13 +38,20 @@ import type { Favicon } from "@/types/config";
 import { isHomePage } from "@/utils/layout-utils";
 import { getAuthorAvatarUrl, getSiteLogo } from "@/utils/schema-image";
 import { buildSiteGraph, toAbsoluteUrl } from "@/utils/schema-utils";
-import { getOgLocale } from "@/utils/site-config-utils";
-import { getCanonicalUrl, url } from "@/utils/url-utils";
+import { getLocaleFromPath, getDefaultLocale, localizeConfigText } from "@/utils/locale";
+import { getRouteAlternates } from "@/utils/localized-content";
+import { getLocalizedSiteConfig, getOgLocale } from "@/utils/site-config-utils";
+import { getCanonicalUrl, url as baseUrl } from "@/utils/url-utils";
 
 import "@/styles/main.css";
 import "@/styles/immersive-reading.css";
 import "@/styles/variables.styl";
 import "@rehype-callouts-theme";
+
+const pageLocale = getLocaleFromPath(Astro.url.pathname);
+const siteConfig = getLocalizedSiteConfig(baseSiteConfig, pageLocale);
+const languageRoutes = await getRouteAlternates(Astro.url.pathname);
+const defaultLocale = getDefaultLocale();
 
 interface Props {
 	title?: string;
@@ -55,12 +64,12 @@ interface Props {
 	ogImageHeight?: number;
 	ogImageAlt?: string;
 	hasWallpaper?: boolean;
+	excludeFromSearch?: boolean;
 }
 
 let {
 	title,
 	description,
-	lang,
 	setOGTypeArticle,
 	postSlug,
 	postCoverImage,
@@ -68,6 +77,7 @@ let {
 	ogImageHeight: propsOgImageHeight,
 	ogImageAlt: propsOgImageAlt,
 	hasWallpaper = false,
+	excludeFromSearch = false,
 } = Astro.props;
 
 // apply a class to the body element to decide the height of the banner, only used for initial page load
@@ -115,17 +125,13 @@ const favicons: Favicon[] =
 const appleTouchIcon =
 	favicons.find((f) => f.src.toLowerCase().endsWith(".png")) ?? favicons[0];
 
-// const siteLang = siteConfig.lang.replace('_', '-')
-if (!lang) {
-	lang = `${siteConfig.lang}`;
-}
-const siteLang = lang.replace("_", "-");
+const siteLang = pageLocale === "zh" ? "zh-CN" : "en";
 
 // 首页站点级结构化数据用的作者头像 URL（Person.image），经 toAbsoluteImageUrl 三分解析
 const avatarUrl = await getAuthorAvatarUrl();
 // 作者个人页（/about/）绝对 URL，作为 Person.url
 const aboutUrl =
-	toAbsoluteUrl("/about/", siteConfig.site_url) ?? siteConfig.site_url;
+	toAbsoluteUrl(url("/about/"), siteConfig.site_url) ?? siteConfig.site_url;
 // 站点 publisher logo（Organization.logo），用于首页 @graph 的 Organization 节点
 const siteLogo = await getSiteLogo();
 
@@ -138,7 +144,8 @@ let ogImageWidth: number | undefined;
 let ogImageHeight: number | undefined;
 const isGeneratedOg = siteConfig.post.generateOgImages && postSlug;
 if (isGeneratedOg) {
-	ogImageUrl = new URL(`/og/${postSlug}.png`, Astro.site).toString();
+	const legacyOgSlug = postSlug.replace(/^(?:zh|en)\//, "");
+	ogImageUrl = new URL(`/og/${pageLocale === "en" ? "en/" : ""}${legacyOgSlug}.png`, Astro.site).toString();
 	ogImageWidth = 1200;
 	ogImageHeight = 630;
 } else if (postCoverImage) {
@@ -153,12 +160,52 @@ if (isGeneratedOg) {
 const ogImageAlt = propsOgImageAlt ?? pageTitle;
 
 // 使用固定的banner偏移量，position配置用于图片定位
+
+function url(path: string): string { return baseUrl(path, pageLocale); }
 ---
 
 <!doctype html>
-<html lang={siteLang} class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode} data-fullscreen-layout={fullscreenLayout} data-has-wallpaper={hasWallpaper ? "" : undefined} data-tag-style={siteConfig.tagStyle ?? "pill"} data-category-style={siteConfig.categoryStyle ?? "rectangle"}>
+<html style={{ "--hue": configHue }} lang={siteLang} data-pagefind-ignore={excludeFromSearch ? "all" : undefined} class="bg-(--page-bg) text-[14px] md:text-[16px]" data-wallpaper-mode={backgroundWallpaper.mode} data-fullscreen-layout={fullscreenLayout} data-has-wallpaper={hasWallpaper ? "" : undefined} data-tag-style={siteConfig.tagStyle ?? "pill"} data-category-style={siteConfig.categoryStyle ?? "rectangle"}>
   <head>
     <meta charset="UTF-8" />
+    <link rel="alternate" hreflang="zh-CN" href={new URL(languageRoutes.zh, Astro.site).href} />
+    <link rel="alternate" hreflang="en" href={new URL(languageRoutes.en, Astro.site).href} />
+    <link rel="alternate" hreflang="x-default" href={new URL(languageRoutes.zh, Astro.site).href} />
+    <script is:inline define:vars={{ languageRoutes, defaultLocale }}>
+      (() => {
+        const current = new URL(location.href);
+        const forced = current.searchParams.get("lang");
+        let saved;
+        try { saved = localStorage.getItem("firefly-language"); } catch {}
+        let wanted;
+        if (forced === "zh" || forced === "en") {
+          wanted = forced;
+          try { localStorage.setItem("firefly-language", wanted); } catch {}
+        } else if (/^\/en(?:\/|$)/.test(current.pathname)) return;
+        else if (saved === "zh" || saved === "en") wanted = saved;
+        else {
+          const preferred = navigator.languages?.[0] || navigator.language;
+          wanted = preferred ? (preferred.toLowerCase().startsWith("zh") ? "zh" : "en") : defaultLocale;
+        }
+        const target = new URL(languageRoutes[wanted], current);
+        if (target.pathname === current.pathname) return;
+        target.search = current.search;
+        target.hash = current.hash;
+        document.documentElement.style.visibility = "hidden";
+        location.replace(target.href);
+      })();
+      // Keep an explicit choice usable when browser storage is unavailable.
+      document.addEventListener("click", (event) => {
+        const forced = new URLSearchParams(location.search).get("lang");
+        if (forced !== "zh" && forced !== "en") return;
+        const anchor = event.target?.closest?.("a[href]");
+        if (!anchor || anchor.id === "language-switch" || anchor.target === "_blank" || anchor.hasAttribute("download")) return;
+        const target = new URL(anchor.href, location.href);
+        if (target.origin !== location.origin || /\.[a-z0-9]+$/i.test(target.pathname)) return;
+        target.searchParams.set("lang", forced);
+        anchor.href = target.href;
+      }, true);
+    </script>
     <style is:inline>
 			@layer properties, theme, base, components, utilities;
 		</style>
@@ -199,11 +246,11 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
         <meta name="keywords" content={siteConfig.keywords.join(", ")} />
       )
     }
-    <meta name="author" content={profileConfig.name} />
+    <meta name="author" content={localizeConfigText(profileConfig.name, pageLocale)} />
 
     <link rel="canonical" href={canonicalUrl} />
     <meta property="og:site_name" content={siteConfig.title} />
-    <meta property="og:locale" content={getOgLocale(lang)} />
+    <meta property="og:locale" content={getOgLocale(siteLang)} />
     <meta property="og:url" content={canonicalUrl} />
     <meta property="og:title" content={pageTitle} />
     <meta
@@ -241,7 +288,7 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
             buildSiteGraph({
               site: siteConfig.site_url,
               siteConfig,
-              profileConfig,
+              profileConfig: { ...profileConfig, name: localizeConfigText(profileConfig.name, pageLocale), bio: localizeConfigText(profileConfig.bio, pageLocale) },
               lang: siteLang,
               authorUrl: aboutUrl,
               avatarUrl,
@@ -346,6 +393,7 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
       define:vars={{
         PAGE_WIDTH,
         configHue,
+        isThemeColorSwitchable: displaySettingsConfig.themeColorSwitchable,
         defaultMode: siteConfig.themeColor.defaultMode ?? "light",
         defaultWallpaperMode: backgroundWallpaper.mode,
         isWallpaperSwitchable:
@@ -398,8 +446,10 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
         isDark ? darkTheme : lightTheme
       );
 
-      // Load the hue from local storage
-      const hue = localStorage.getItem("hue") || configHue;
+      // Respect the configured brand color when custom theme colors are disabled.
+      const hue = isThemeColorSwitchable
+        ? localStorage.getItem("hue") || configHue
+        : configHue;
       document.documentElement.style.setProperty("--hue", hue);
       // 首帧先匹配深浅背景，BrowserChrome 随后同步实际计算后的主题底色。
       const browserThemeMeta = document.querySelector('meta[name="theme-color"]');
@@ -497,15 +547,15 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
     <link
       rel="alternate"
       type="application/rss+xml"
-      title={profileConfig.name}
-      href={`${Astro.site}rss.xml`}
+      title={localizeConfigText(profileConfig.name, pageLocale)}
+      href={new URL(pageLocale === "en" ? "en/rss.xml" : "rss.xml", Astro.site).href}
     />
 
     <link
       rel="alternate"
       type="application/atom+xml"
-      title={profileConfig.name}
-      href={`${Astro.site}atom.xml`}
+      title={localizeConfigText(profileConfig.name, pageLocale)}
+      href={new URL(pageLocale === "en" ? "en/atom.xml" : "atom.xml", Astro.site).href}
     />
 
     <!-- Font Setup (Astro Font API) -->
@@ -583,7 +633,9 @@ const ogImageAlt = propsOgImageAlt ?? pageTitle;
 
     <!-- GitHub 卡片客户端实时补全（forks/stars） -->
     <GithubCardManager />
-  </body>
+  <CodeLocale />
+<LanguageHash />
+</body>
 </html>
 
 

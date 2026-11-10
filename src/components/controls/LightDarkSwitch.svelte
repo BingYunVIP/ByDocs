@@ -1,6 +1,9 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
+let { locale = "zh" }: { locale?: Locale } = $props();
 import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
+import { createTranslator } from "@i18n/translation";
 import { onMount } from "svelte";
 import DropdownItem from "@/components/common/DropdownItem.svelte";
 import Icon from "@/components/common/Icon.svelte";

@@ -1,10 +1,12 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 /**
  * 侧边栏动态组件 - 从 API 获取数据
  * 支持自定义 API 地址，方便接入第三方后端
  */
 import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
+import { createTranslator } from "@i18n/translation";
 import { onMount } from "svelte";
 import { formatDynamicDate } from "@/utils/date-utils";
 import { fetchWithDedup } from "@/utils/fetch-dedup";
@@ -27,12 +29,13 @@ interface MemosConfig {
 }
 
 interface Props {
+	locale?: Locale;
 	apiUrl: string;
 	limit: number;
 	memos?: MemosConfig;
 }
 
-let { apiUrl, limit, memos }: Props = $props();
+let { locale = "zh",  apiUrl, limit, memos }: Props = $props();
 
 let entries: DynamicEntry[] = $state([]);
 let totalCount = $state(0);
@@ -77,7 +80,7 @@ function getPlainText(html: string): string {
 // 第三方 API 和 Memos 使用浏览器本地时区，不做额外转换
 function formatDate(timestamp: number): string {
 	if (apiUrl.startsWith("http") || memos?.enable) {
-		return new Date(timestamp).toLocaleDateString("zh-CN", {
+		return new Date(timestamp).toLocaleDateString(locale === "en" ? "en" : "zh-CN", {
 			year: "numeric",
 			month: "2-digit",
 			day: "2-digit",
@@ -85,7 +88,7 @@ function formatDate(timestamp: number): string {
 			minute: "2-digit",
 		});
 	}
-	return formatDynamicDate(new Date(timestamp));
+	return formatDynamicDate(new Date(timestamp), locale);
 }
 </script>
 
@@ -106,7 +109,7 @@ function formatDate(timestamp: number): string {
 			{@const text = getPlainText(entry.html)}
 			{@const hasImage = (entry.images?.length ?? 0) > 0}
 			<a
-				href={url(`/dynamic/#dynamic-${entry.id}`)}
+				href={url(`/dynamic/#dynamic-${entry.id}`, locale)}
 				class="group flex min-w-0 min-h-16 items-center gap-3 rounded-lg p-2
 					text-neutral-700/75 dark:text-neutral-300/75
 					hover:bg-(--btn-plain-bg-hover) hover:text-(--primary)

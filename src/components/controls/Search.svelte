@@ -1,6 +1,9 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
+export let locale: Locale = "zh";
 import I18nKey from "@i18n/i18nKey";
-import { i18n } from "@i18n/translation";
+import { createTranslator } from "@i18n/translation";
 import { navigateToPage } from "@utils/navigation-utils";
 import { onMount } from "svelte";
 import Icon from "@/components/common/Icon.svelte";
@@ -20,13 +23,13 @@ let searchRequestId = 0;
 // --- Mocks for Dev Mode ---
 const fakeResult: SearchResult[] = [
 	{
-		url: formatUrl("/"),
+		url: formatUrl("/", locale),
 		meta: { title: "This Is a Fake Search Result" },
 		excerpt:
 			"Because Pagefind cannot work in the <mark>dev</mark> environment.",
 	},
 	{
-		url: formatUrl("/"),
+		url: formatUrl("/", locale),
 		meta: { title: "If You Want to Test the Search" },
 		excerpt: "Try running <mark>npm build && npm preview</mark> instead.",
 	},
@@ -140,8 +143,6 @@ const search = async (keyword: string, isDesktop: boolean): Promise<void> => {
 onMount(() => {
 	const initializePagefind = () => {
 		initialized = true;
-		if (keywordDesktop) search(keywordDesktop, true);
-		if (keywordMobile) search(keywordMobile, false);
 	};
 
 	if (import.meta.env.DEV) {
@@ -173,12 +174,10 @@ onMount(() => {
 	};
 });
 
-// --- Reactive Statements ---
-$: if (initialized && (keywordDesktop || keywordDesktop === "")) {
-	search(keywordDesktop, true);
-}
-$: if (initialized && (keywordMobile || keywordMobile === "")) {
-	search(keywordMobile, false);
+// One active query owns the shared debounce/request state. The inactive
+// viewport's empty input must not cancel a query when Pagefind becomes ready.
+$: if (initialized) {
+	search(keywordDesktop || keywordMobile, Boolean(keywordDesktop));
 }
 </script>
 
@@ -198,7 +197,7 @@ $: if (initialized && (keywordMobile || keywordMobile === "")) {
 </div>
 
 <!-- toggle btn for phone/tablet view -->
-<button on:click={togglePanel} aria-label="Search Panel" aria-controls="search-panel" aria-expanded="false" id="search-switch"
+<button on:click={togglePanel} aria-label={i18n(I18nKey.search)} aria-controls="search-panel" aria-expanded="false" id="search-switch"
 		class="btn-plain scale-animation lg:hidden! rounded-lg w-11 h-11 active:scale-90">
     <Icon icon="material-symbols:search" class="text-[1.25rem]"></Icon>
 </button>
@@ -259,8 +258,8 @@ top-20 left-4 md:left-[unset] right-4 shadow-2xl rounded-2xl p-2"
             </a>
         {/each}
         {#if result.length > 5}
-            <a href={getSearchUrl(keywordDesktop || keywordMobile)}
-               on:click={(e) => handleResultClick(e, getSearchUrl(keywordDesktop || keywordMobile))}
+            <a href={getSearchUrl(keywordDesktop || keywordMobile, locale)}
+               on:click={(e) => handleResultClick(e, getSearchUrl(keywordDesktop || keywordMobile, locale))}
                class="transition first-of-type:mt-2 lg:first-of-type:mt-0 group block rounded-xl text-lg px-3 py-2 hover:bg-(--btn-plain-bg-hover) active:bg-(--btn-plain-bg-active) text-(--primary) font-bold text-center">
                 <span class="inline-flex items-center">
                     {i18n(I18nKey.searchViewMore).replace('{count}', (result.length - 5).toString())}

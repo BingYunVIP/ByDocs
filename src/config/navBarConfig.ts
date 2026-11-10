@@ -14,40 +14,72 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 	const links: NavBarLink[] = [];
 
 	// 主页
-	links.push(LinkPresets.Home);
+	// links.push(LinkPresets.Home);
 
 	// 文章及其子菜单
-	links.push({
-		name: "文章",
-		url: "#",
-		icon: "material-symbols:article",
-		children: [
-			// 归档
-			LinkPresets.Archive,
+	// links.push({
+	// 	name: "文章",
+	// 	url: "#",
+	// 	icon: "material-symbols:article",
+	// 	children: [
+	// 		// 归档
+	// 		LinkPresets.Archive,
 
-			// 分类
-			LinkPresets.Categories,
+	// 		// 分类
+	// 		LinkPresets.Categories,
 
-			// 标签
-			LinkPresets.Tags,
+	// 		// 标签
+	// 		LinkPresets.Tags,
 
-			// 系列
-			LinkPresets.Series,
-		],
-	});
+	// 		// 系列
+	// 		LinkPresets.Series,
+	// 	],
+	// });
 
 	//社交及其子菜单
-	links.push({
-		name: "社交",
-		url: "#",
-		icon: "material-symbols:group",
-		children: [
-			// 友链
-			LinkPresets.Friends,
+	// links.push({
+	// 	name: "社交",
+	// 	url: "#",
+	// 	icon: "material-symbols:group",
+	// 	children: [
+	// 		// 友链
+	// 		LinkPresets.Friends,
 
-			// 留言
-			LinkPresets.Guestbook,
-		],
+	// 		// 留言
+	// 		LinkPresets.Guestbook,
+	// 	],
+	// });
+
+	// 冰云AI
+	links.push({
+		name: "冰云AI",
+		url: "https://api.bingyun.vip",
+		external: true,
+		icon: "simple-icons:openai",
+	});
+
+	// 冰云小店
+	links.push({
+		name: "冰云小店",
+		url: "https://shop.bingyun.vip",
+		external: true,
+		icon: "material-symbols:shop",
+	});
+
+	// 冰云画布
+	links.push({
+		name: "冰云画布",
+		url: "https://cvs.bingyun.vip",
+		external: true,
+		icon: "mdi:artboard",
+	});
+
+	// 售后群
+	links.push({
+		name: "售后群",
+		url: "https://qm.qq.com/q/K3WrJHvw8Q",
+		external: true,
+		icon: "fa7-brands:qq",
 	});
 
 	// 我的及其子菜单
@@ -63,22 +95,22 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 			LinkPresets.Projects,
 
 			// 相册
-			LinkPresets.Gallery,
+			// LinkPresets.Gallery,
 
 			// 书签导航
-			LinkPresets.Booknav,
+			// LinkPresets.Booknav,
 
 			// 哔哩哔哩追番
-			LinkPresets.Bilibili,
+			// LinkPresets.Bilibili,
 
 			// 番组计划
-			LinkPresets.Bangumi,
+			// LinkPresets.Bangumi,
 
 			// VNDB
-			LinkPresets.VNDB,
+			// LinkPresets.VNDB,
 
 			// MyAnimeList
-			LinkPresets.MAL,
+			// LinkPresets.MAL,
 		],
 	});
 
@@ -97,32 +129,32 @@ const getDynamicNavBarConfig = (): NavBarConfig => {
 	});
 
 	// 自定义导航栏链接
-	links.push({
-		name: "链接",
-		url: "#",
-		icon: "material-symbols:link",
-		// 子菜单
-		children: [
-			{
-				name: "GitHub",
-				url: "https://github.com/CuteLeaf/Firefly",
-				external: true,
-				icon: "fa7-brands:github",
-			},
-			{
-				name: "Gitee",
-				url: "https://gitee.com/CuteLeaf/Firefly",
-				external: true,
-				icon: "fa7-brands:gitee",
-			},
-			{
-				name: "Firefly文档",
-				url: "https://docs-firefly.cuteleaf.cn",
-				external: true,
-				icon: "material-symbols:docs",
-			},
-		],
-	});
+	// links.push({
+	// 	name: "链接",
+	// 	url: "#",
+	// 	icon: "material-symbols:link",
+	// 	// 子菜单
+	// 	children: [
+	// 		{
+	// 			name: "GitHub",
+	// 			url: "https://github.com/CuteLeaf/Firefly",
+	// 			external: true,
+	// 			icon: "fa7-brands:github",
+	// 		},
+	// 		{
+	// 			name: "Gitee",
+	// 			url: "https://gitee.com/CuteLeaf/Firefly",
+	// 			external: true,
+	// 			icon: "fa7-brands:gitee",
+	// 		},
+	// 		{
+	// 			name: "Firefly文档",
+	// 			url: "https://docs-firefly.cuteleaf.cn",
+	// 			external: true,
+	// 			icon: "material-symbols:docs",
+	// 		},
+	// 	],
+	// });
 
 	// 文档链接
 	// links.push({

@@ -1,16 +1,19 @@
 <script lang="ts">
+import type { Locale } from "@/utils/locale";
+function i18n(key: I18nKey): string { return createTranslator(locale)(key); }
 import PageJump from "@/components/common/PageJump.svelte";
 import I18nKey from "@/i18n/i18nKey";
-import { i18n } from "@/i18n/translation";
+import { createTranslator } from "@/i18n/translation";
 
 interface Props {
+	locale?: Locale;
 	totalItems: number;
 	itemsPerPage: number;
 	currentPage: number;
 	onPageChange: (page: number) => void;
 }
 
-const { totalItems, itemsPerPage, currentPage, onPageChange }: Props = $props();
+const { locale = "zh",  totalItems, itemsPerPage, currentPage, onPageChange }: Props = $props();
 
 const totalPages = $derived(Math.ceil(totalItems / itemsPerPage));
 
@@ -59,7 +62,7 @@ function goToPage(page: number) {
       </button>
 
       <div class="btn-card flex items-center rounded-(--radius-large) px-4 h-11 gap-1.5">
-        <PageJump variant="current" {currentPage} lastPage={totalPages} onJump={goToPage} />
+        <PageJump locale={locale} variant="current" {currentPage} lastPage={totalPages} onJump={goToPage} />
         <span class="text-sm text-neutral-500 dark:text-neutral-500">/</span>
         <span class="text-base font-bold text-neutral-700 dark:text-neutral-300">{totalPages}</span>
       </div>
@@ -89,7 +92,7 @@ function goToPage(page: number) {
 
       {#each pageNumbers as pageItem}
         {#if pageItem === "..."}
-          <PageJump variant="ellipsis" {currentPage} lastPage={totalPages} onJump={goToPage} />
+          <PageJump locale={locale} variant="ellipsis" {currentPage} lastPage={totalPages} onJump={goToPage} />
         {:else}
           <button
             type="button"
